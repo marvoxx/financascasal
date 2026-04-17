@@ -1,466 +1,588 @@
-<!-- 
-  FINANÇAS DO CASAL - VERSÃO CORRIGIDA
-  Instruções para resolver o Erro 400:
-  1. Vá para https://console.cloud.google.com/
-  2. Selecione seu projeto "FinancasCasal".
-  3. Vá em "APIs e Serviços" > "Credenciais".
-  4. Clique no seu ID de cliente OAuth 2.0.
-  5. Em "Origens JavaScript autorizadas", adicione:
-     - http://localhost
-     - http://localhost:8080
-     - (E a URL onde você hospeda o site, se houver)
-  6. Se o erro persistir, verifique em "Tela de consentimento OAuth" se o app está em modo "Produção" ou se o seu e-mail está na lista de "Usuários de teste".
--->
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<meta name="theme-color" content="#534AB7"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-title" content="Finanças"/>
-<title>Finanças do Casal</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<style>
-:root{
-  --p:#534AB7;--pl:#EEEDFE;--pd:#3C3489;
-  --g:#1D9E75;--gl:#E1F5EE;--gd:#085041;
-  --r:#993C1D;--rl:#FAECE7;
-  --a:#BA7517;--al:#FAEEDA;
-  --bl:#E6F1FB;--grl:#F1EFE8;--rl2:#FCEBEB;
-  --bg:#f2f2f7;--surf:#fff;--bord:rgba(0,0,0,.1);
-  --t:#1a1a1a;--t2:#666;--t3:#999;
-  --rad:14px;--rad-s:8px;--rad-m:10px;
-}
-@media(prefers-color-scheme:dark){
-  :root{--bg:#0e0e10;--surf:#1c1c1e;--bord:rgba(255,255,255,.1);--t:#f2f2f7;--t2:#ababab;--t3:#555;
-    --pl:#2a2660;--gl:#0d3d2e;--al:#3a2a08;--bl:#0c2340;--grl:#2a2a2a;--rl2:#3a1010;}
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
-.scr{display:none;flex-direction:column;height:100vh;overflow:hidden}
-.scr.on{display:flex}
-.scroll{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch}
-/* TOPBAR */
-.topbar{background:var(--surf);border-bottom:.5px solid var(--bord);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px}
-.topbar h1{font-size:17px;font-weight:700;color:var(--t)}
-.tbr{display:flex;gap:6px;align-items:center}
-.ib{background:none;border:.5px solid var(--bord);border-radius:var(--rad-s);padding:5px 10px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;position:relative;white-space:nowrap}
-.ib:active{opacity:.7}
-.nb{position:absolute;top:-5px;right:-5px;background:#D85A30;color:#fff;font-size:10px;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px}
-/* BOTTOM NAV */
-.bnav{background:var(--surf);border-top:.5px solid var(--bord);display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
-.nb2{flex:1;padding:8px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--t3);font-size:10px;font-weight:500}
-.nb2.on{color:var(--p)}
-.ni{font-size:19px}
-/* LOGIN */
-.lw{display:flex;flex-direction:column;justify-content:center;padding:28px 18px;gap:12px;flex:1}
-.ll{font-size:54px;text-align:center;margin-bottom:4px}
-.lt{font-size:22px;font-weight:800;text-align:center;color:var(--t)}
-.ls{font-size:14px;color:var(--t2);text-align:center;margin-bottom:4px}
-.gc{background:#fff;border:1px solid #dadce0;border-radius:var(--rad);padding:13px 18px;display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer;font-size:15px;font-weight:600;color:#3c4043;box-shadow:0 1px 4px rgba(0,0,0,.1)}
-.gc:active{transform:scale(.98)}
-.gc svg{width:22px;height:22px;flex-shrink:0}
-/* CARDS */
-.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.mc{background:var(--surf);border-radius:var(--rad);padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.ml{font-size:12px;color:var(--t2);margin-bottom:3px}
-.mv{font-size:20px;font-weight:800;color:var(--t)}
-.mv.pos{color:#0F6E56}.mv.neg{color:var(--r)}
-/* MONTH NAV */
-.mnav{background:var(--surf);border-radius:var(--rad);padding:9px 12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.mnav button{background:none;border:none;font-size:22px;color:var(--t2);padding:0 6px;cursor:pointer}
-.mnl{font-size:15px;font-weight:700;color:var(--t)}
-/* EXPENSE ITEMS */
-.sec{font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}
-.elist{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
-.ei{background:var(--surf);border:.5px solid var(--bord);border-radius:var(--rad);padding:12px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-.ei:active{transform:scale(.99)}
-.ei.new{border-color:var(--p)}
-.ei.settled{opacity:.6}
-.erow{display:flex;align-items:center;gap:9px}
-.ci{width:36px;height:36px;border-radius:var(--rad-s);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.ei2{flex:1;min-width:0}
-.en{font-size:14px;font-weight:700;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.em{font-size:12px;color:var(--t2);display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-top:2px}
-.ea{text-align:right;flex-shrink:0}
-.eat{font-size:14px;font-weight:700;color:var(--t)}
-.eas{font-size:11px;color:var(--t2)}
-.sd{display:none;margin-top:9px;border-top:.5px solid var(--bord);padding-top:9px}
-.sd.on{display:block}
-.sr{display:flex;align-items:center;gap:7px;margin-bottom:6px}
-.sn{font-size:13px;color:var(--t2);flex:1}
-.sp{font-size:13px;font-weight:700;color:var(--t);width:32px;text-align:right}
-.sv{font-size:12px;color:var(--t2);width:60px;text-align:right}
-.pt{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
-.pme{height:100%;border-radius:3px;background:var(--p)}
-.psp{height:100%;border-radius:3px;background:var(--g)}
-.eacts{display:flex;gap:6px;margin-top:9px}
-.eb{flex:1;padding:7px;font-size:12px;font-weight:600;border-radius:var(--rad-s);cursor:pointer;border:.5px solid var(--bord);background:transparent;color:var(--t2)}
-.eb.del{border-color:#F0997B;color:var(--r)}
-/* FAB */
-.fab{position:fixed;bottom:76px;right:16px;width:54px;height:54px;border-radius:27px;background:var(--p);border:none;color:#fff;font-size:26px;cursor:pointer;box-shadow:0 4px 14px rgba(83,74,183,.4);display:flex;align-items:center;justify-content:center;z-index:50}
-.fab:active{transform:scale(.95)}
-/* MODAL */
-.mbg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center}
-.mod{background:var(--surf);border-radius:20px 20px 0 0;padding:18px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto}
-.mh{width:38px;height:4px;background:var(--bord);border-radius:2px;margin:0 auto 14px}
-.mt{font-size:17px;font-weight:700;margin-bottom:14px;color:var(--t)}
-.fg{margin-bottom:12px}
-.fl{font-size:13px;font-weight:600;color:var(--t2);margin-bottom:5px;display:block}
-.fi{width:100%;padding:11px 13px;border:.5px solid var(--bord);border-radius:var(--rad-s);font-size:15px;background:var(--surf);color:var(--t);outline:none}
-.fi:focus{border-color:var(--p)}
-.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.cb{padding:9px 3px;border:.5px solid var(--bord);border-radius:var(--rad-s);font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;background:var(--surf);text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px}
-.cb .ce{font-size:18px}
-.cb.on{border:2px solid var(--p);color:var(--p);background:var(--pl)}
-.pr{display:flex;gap:8px}
-.pb{flex:1;padding:10px;border:.5px solid var(--bord);border-radius:var(--rad-s);font-size:14px;font-weight:600;cursor:pointer;background:var(--surf);color:var(--t2);display:flex;align-items:center;justify-content:center;gap:7px}
-.pb.me{border:2px solid var(--p);color:var(--p);background:var(--pl)}
-.pb.sp{border:2px solid var(--g);color:var(--gd);background:var(--gl)}
-.slg{margin-bottom:12px}
-.sll{display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin-bottom:5px}
-.slv{display:flex;justify-content:space-between;font-size:15px;font-weight:700;color:var(--t);margin-top:5px}
-input[type=range]{width:100%;accent-color:var(--p)}
-.macts{display:flex;gap:8px;margin-top:14px}
-.bc{flex:1;padding:12px;border:.5px solid var(--bord);border-radius:var(--rad);font-size:15px;font-weight:600;color:var(--t2);background:transparent;cursor:pointer}
-.bs{flex:2;padding:12px;border:none;border-radius:var(--rad);font-size:15px;font-weight:700;color:#fff;background:var(--p);cursor:pointer}
-.bs:active{transform:scale(.98)}
-/* BALANCE */
-.bc2{background:var(--surf);border-radius:var(--rad);padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.bb{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin:8px 0}
-.bf{height:100%;border-radius:4px;background:var(--p)}
-.bstat{font-size:14px;text-align:center;padding:11px;background:var(--bg);border-radius:var(--rad-s);margin-top:8px}
-.bq{width:100%;padding:12px;margin-top:10px;border:none;border-radius:var(--rad);font-size:15px;font-weight:700;color:#fff;background:var(--g);cursor:pointer}
-.bq:disabled{background:var(--bg);color:var(--t3);cursor:default}
-.setb{background:var(--gl);border-radius:var(--rad-s);padding:9px;font-size:13px;color:var(--gd);margin-top:9px;text-align:center;font-weight:600}
-/* AVATAR */
-.av{border-radius:50%;object-fit:cover;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
-.av-p{background:var(--pl);color:var(--pd)}
-.av-g{background:var(--gl);color:var(--gd)}
-/* BADGES */
-.badge{font-size:11px;padding:2px 7px;border-radius:20px;font-weight:600}
-.bme{background:var(--pl);color:var(--pd)}
-.bsp{background:var(--gl);color:var(--gd)}
-.bnew{background:var(--al);color:#633806}
-.bset{background:var(--gl);color:var(--gd)}
-/* LOADING/TOAST */
-.lov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;display:flex;align-items:center;justify-content:center}
-.lbox{background:var(--surf);border-radius:var(--rad);padding:22px 28px;text-align:center;font-size:15px;font-weight:600;color:var(--t)}
-.lspin{width:30px;height:30px;border:3px solid var(--bord);border-top-color:var(--p);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.toast{position:fixed;bottom:86px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:9px 18px;border-radius:30px;font-size:14px;font-weight:500;z-index:600;opacity:0;transition:opacity .3s;white-space:nowrap}
-.toast.on{opacity:1}
-.empty{text-align:center;padding:36px 20px;color:var(--t2);font-size:15px;line-height:1.6}
-/* SETUP */
-.setup{display:flex;flex-direction:column;justify-content:center;padding:24px 18px;gap:14px;flex:1}
-.sbanner{background:var(--pl);border:1px solid var(--p);border-radius:var(--rad);padding:13px;font-size:13px;color:var(--pd);line-height:1.5}
-.sbanner strong{display:block;font-size:14px;margin-bottom:4px}
-.sbtn{width:100%;padding:13px;background:var(--p);color:#fff;border:none;border-radius:var(--rad);font-size:15px;font-weight:700;cursor:pointer}
-/* ADMIN */
-.atab{display:flex;gap:4px;background:var(--bg);border-radius:var(--rad-m);padding:3px;margin-bottom:12px}
-.at{flex:1;padding:7px;font-size:13px;font-weight:600;text-align:center;border-radius:7px;cursor:pointer;color:var(--t2);border:none;background:transparent}
-.at.on{background:var(--surf);color:var(--t);box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.acard{background:var(--surf);border:.5px solid var(--bord);border-radius:var(--rad);padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
-</style>
-</head>
-<body>
 
-<!-- APP STRUCTURE -->
-<div class="scr" id="scr-setup">
-  <div class="setup">
-    <div class="ll">⚙️</div>
-    <div class="lt">Configuração Inicial</div>
-    <div class="ls">Cole a URL do seu Google Apps Script para começar.</div>
-    <div class="sbanner">
-      <strong>Importante:</strong> Certifique-se de que o seu script foi implantado como "App da Web" e permite acesso a "Qualquer pessoa".
-    </div>
-    <div class="fg">
-      <input class="fi" id="setup-url" placeholder="https://script.google.com/macros/s/..." type="url"/>
-    </div>
-    <button class="sbtn" onclick="saveConfig()">Salvar e Continuar</button>
-  </div>
-</div>
+// ============================================================
+//  FINANÇAS DO CASAL v2 — Google Apps Script (CORRIGIDO)
+//  Cole este código, altere o SUPER_ADMIN_EMAIL e faça deploy
+// ============================================================
 
-<div class="scr" id="scr-login">
-  <div class="lw">
-    <div class="ll">💜</div>
-    <div class="lt">Finanças do Casal</div>
-    <div class="ls">Faça login para sincronizar seus dados</div>
-    <div id="g-signin-btn" style="display:flex;justify-content:center;margin:10px 0"></div>
-    <div id="login-status" style="text-align:center;font-size:12px;color:var(--r);margin-top:10px"></div>
-    <div style="margin-top:20px; font-size:11px; color:var(--t3); text-align:center; line-height:1.4">
-      Se aparecer "Erro 400", verifique se o seu domínio ou localhost está nas "Origens JavaScript autorizadas" no Console do Google Cloud.
-    </div>
-  </div>
-</div>
+// ⚠️  ALTERE ANTES DE FAZER DEPLOY:
+const SUPER_ADMIN_EMAIL = "douglas.luiz.silva@gmail.com";
 
-<div class="scr" id="scr-main">
-  <div class="topbar">
-    <div style="display:flex;align-items:center;gap:10px">
-      <div class="av av-p" id="topav" style="width:32px;height:32px;font-size:12px"></div>
-      <div><h1 id="topname">Olá!</h1></div>
-    </div>
-    <div class="tbr">
-      <button class="ib" onclick="setTab('notif')">🔔<div class="nb" id="ncount" style="display:none">0</div></button>
-      <button class="ib" onclick="setTab('profile')">👤</button>
-    </div>
-  </div>
-  <div class="scroll" id="main-scroll"></div>
-  <div class="bnav">
-    <button class="nb2" id="nav-expenses" onclick="setTab('expenses')"><span class="ni">💰</span>Gastos</button>
-    <button class="nb2" id="nav-balance" onclick="setTab('balance')"><span class="ni">⚖️</span>Saldo</button>
-    <button class="nb2" id="nav-history" onclick="setTab('history')"><span class="ni">📅</span>Histórico</button>
-    <button class="nb2" id="nav-report" onclick="setTab('report')"><span class="ni">📊</span>Relatórios</button>
-    <button class="nb2" id="nav-admin" onclick="setTab('admin')" style="display:none"><span class="ni">🛡️</span>Admin</button>
-  </div>
-  <button class="fab" id="fab-add" onclick="openAdd()">+</button>
-</div>
+const SH = {
+  USERS    : "Usuarios",
+  EXPENSES : "Despesas",
+  SETTLE   : "Quitacoes",
+  ALLOWED  : "Autorizados",
+  ADMINS   : "Admins"
+};
 
-<div class="mbg" id="mbg" onclick="bgClose(event)" style="display:none">
-  <div class="mod" id="minner"></div>
-</div>
-
-<div class="lov" id="lov" style="display:none"><div class="lbox"><div class="lspin"></div><div id="lmsg">Carregando...</div></div></div>
-<div class="toast" id="toast"></div>
-
-<input type="file" id="photo-file" style="display:none" accept="image/*" onchange="handlePhotoUpload(event)"/>
-
-<script src="https://accounts.google.com/gsi/client"></script>
-<script>
-const CFG_KEY   = 'fc_url_v2';
-const TOKEN_KEY = 'fc_token_v2';
-const EMAIL_KEY = 'fc_email_v2';
-const SEEN_KEY  = 'fc_seen_v2_';
-
-// VERIFIQUE ESTE ID NO SEU GOOGLE CLOUD CONSOLE
-const GOOGLE_CLIENT_ID = "484700340283-i6asp28o915s2qn4or4nof2tpochcuer.apps.googleusercontent.com";
-
-const CATS = [
-  {id:'mercado',   label:'Mercado',    emoji:'🛒',bg:'#EEEDFE',bar:'#534AB7'},
-  {id:'casa',      label:'Casa/Aluguel',emoji:'🏠',bg:'#E6F1FB',bar:'#2196F3'},
-  {id:'lazer',     label:'Lazer/Comer',emoji:'🍕',bg:'#FAEEDA',bar:'#BA7517'},
-  {id:'saude',     label:'Saúde',      emoji:'💊',bg:'#E1F5EE',bar:'#1D9E75'},
-  {id:'transporte',label:'Transporte', emoji:'🚗',bg:'#F1EFE8',bar:'#5F5E5A'},
-  {id:'outros',    label:'Outros',     emoji:'📦',bg:'#FCEBEB',bar:'#993C1D'}
-];
-const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const MESESC = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-
-let S = {
-  url:'', token:'', email:'', profile:{}, isAdmin:false,
-  tab:'expenses',
-  vm: new Date().getMonth()+1, vy: new Date().getFullYear(),
-  openExp:null, openHist:null, editingId:null,
-  expenses:[], settlements:[], users:[],
-  form:{desc:'',val:'',cat:'mercado',payer:'',pct:50},
-  seenIds: new Set(),
-  reportData: null,
-  reportGran: 'month',
-  reportView: 'chart',
-  reportType: 'bar',
-  reportMetric: 'total',
-  reportDim: 'cat',
-  reportStart: '', reportEnd: '',
-  adminTab: 'emails',
-  allowedEmails: [], admins: [],
-  chartInst: null
+// Cabeçalhos de cada aba
+const HEADERS = {
+  Usuarios   : ["email","name","photo","createdAt","lastLogin"],
+  Despesas   : ["id","desc","cat","val","payer","pctMe","date","addedBy","settled","settledAt","settledMonth"],
+  Quitacoes  : ["month","settledDate","settledBy","totalValue","expenseCount"],
+  Autorizados: ["email","status","name","addedAt","addedBy"],
+  Admins     : ["email","name","addedAt"]
 };
 
 // ============================================================
-//  INIT
+//  SETUP — rode esta função UMA vez manualmente após colar o código
+//  Menu: Executar > setupPlanilhas
 // ============================================================
-window.onload = () => {
-  S.url   = localStorage.getItem(CFG_KEY)   || '';
-  S.token = localStorage.getItem(TOKEN_KEY) || '';
-  S.email = localStorage.getItem(EMAIL_KEY) || '';
-  if (!S.url) { show('scr-setup'); return; }
-  if (S.token) { tryAutoLogin(); return; }
-  show('scr-login');
-  setTimeout(initGSI, 200);
-};
+function setupPlanilhas() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-function show(id) {
-  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
-  document.getElementById(id).classList.add('on');
-}
-
-function saveConfig() {
-  const url = document.getElementById('setup-url').value.trim();
-  if (!url.startsWith('https://')) { toast('URL inválida'); return; }
-  S.url = url;
-  localStorage.setItem(CFG_KEY, url);
-  show('scr-login');
-  setTimeout(initGSI, 100);
-}
-
-function initGSI() {
-  if (!window.google || !window.google.accounts) {
-    setTimeout(initGSI, 300);
-    return;
-  }
-  const btn = document.getElementById('g-signin-btn');
-  if (!btn) return;
-
-  google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback : onGoogleToken,
-    ux_mode  : 'popup'
+  Object.keys(HEADERS).forEach(name => {
+    let sheet = ss.getSheetByName(name);
+    if (!sheet) {
+      sheet = ss.insertSheet(name);
+      Logger.log("Criando aba: " + name);
+    }
+    // Só coloca cabeçalho se a planilha estiver vazia
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(HEADERS[name]);
+      // Formata cabeçalho
+      sheet.getRange(1, 1, 1, HEADERS[name].length)
+        .setBackground("#534AB7")
+        .setFontColor("#ffffff")
+        .setFontWeight("bold");
+    }
   });
 
-  google.accounts.id.renderButton(btn, {
-    theme : 'outline',
-    size  : 'large',
-    width : 280,
-    locale: 'pt-BR'
+  // Garante que o super admin está na lista de autorizados
+  const allowed = ss.getSheetByName(SH.ALLOWED);
+  const aRows   = allowed.getDataRange().getValues();
+  const jaExiste = aRows.some(r => String(r[0]).toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase());
+  if (!jaExiste) {
+    allowed.appendRow([SUPER_ADMIN_EMAIL, "ativo", "Super Admin", new Date().toISOString(), ""]);
+    Logger.log("Super admin adicionado em Autorizados: " + SUPER_ADMIN_EMAIL);
+  }
+
+  // Garante que o super admin está na lista de admins
+  const admins = ss.getSheetByName(SH.ADMINS);
+  const dRows  = admins.getDataRange().getValues();
+  const jaAdmin = dRows.some(r => String(r[0]).toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase());
+  if (!jaAdmin) {
+    admins.appendRow([SUPER_ADMIN_EMAIL, "Super Admin", new Date().toISOString()]);
+    Logger.log("Super admin adicionado em Admins: " + SUPER_ADMIN_EMAIL);
+  }
+
+  // Remove aba padrão "Planilha1" se existir e estiver vazia
+  const def = ss.getSheetByName("Planilha1") || ss.getSheetByName("Sheet1");
+  if (def && def.getLastRow() <= 1 && ss.getSheets().length > 1) {
+    ss.deleteSheet(def);
+  }
+
+  SpreadsheetApp.getUi().alert(
+    "✅ Setup concluído!\n\n" +
+    "Abas criadas: " + Object.keys(HEADERS).join(", ") + "\n" +
+    "Super admin: " + SUPER_ADMIN_EMAIL + "\n\n" +
+    "Agora faça o deploy como App da Web."
+  );
+}
+
+// ============================================================
+//  ENTRY POINTS
+// ============================================================
+function doGet(e) {
+  // Permite testar se o deploy está funcionando
+  return json({ status: "ok", version: "2.1", ts: new Date().toISOString() });
+}
+
+function doPost(e) {
+  try {
+    const body   = JSON.parse(e.postData.contents);
+    const action = body.action;
+
+    // ---- Rotas públicas ----
+    if (action === "ping")       return json({ pong: true });
+    if (action === "googleLogin") return json(googleLogin(body));
+    if (action === "checkAuth")   return json(checkAuth(body));
+
+    // ---- Rotas autenticadas ----
+    const auth = verifyToken(body.token);
+    if (!auth.ok) return json({ error: "Sessão inválida. Faça login novamente.", code: 401 });
+    const user = auth.user;
+
+    switch (action) {
+      // Admin
+      case "getAllowedEmails":   return json(requireAdmin(user, () => getAllowedEmails()));
+      case "addAllowedEmail":    return json(requireAdmin(user, () => addAllowedEmail(body, user)));
+      case "removeAllowedEmail": return json(requireAdmin(user, () => removeAllowedEmail(body)));
+      case "getAdmins":          return json(requireAdmin(user, () => getAdmins()));
+      case "addAdmin":           return json(requireAdmin(user, () => addAdmin(body)));
+      case "removeAdmin":        return json(requireAdmin(user, () => removeAdmin(body)));
+      case "getAllUsers":         return json(requireAdmin(user, () => getAllUsers()));
+      // Perfil
+      case "updateProfile":      return json(updateProfile(user, body));
+      // Despesas
+      case "getExpenses":        return json(getExpenses(body));
+      case "addExpense":         return json(addExpense(user, body));
+      case "editExpense":        return json(editExpense(user, body));
+      case "deleteExpense":      return json(deleteExpense(user, body));
+      // Quitação
+      case "getSettlements":     return json(getSettlements());
+      case "settleMonth":        return json(settleMonth(user, body));
+      // Relatório
+      case "getReportData":      return json(getReportData(body));
+      default:
+        return json({ error: "Ação desconhecida: " + action });
+    }
+  } catch (err) {
+    Logger.log("ERRO doPost: " + err.toString() + "\n" + err.stack);
+    return json({ error: err.toString() });
+  }
+}
+
+// ============================================================
+//  AUTENTICAÇÃO
+// ============================================================
+
+// O app envia o id_token do Google. Validamos chamando a API do Google.
+function googleLogin(body) {
+  const idToken = body.idToken;
+  if (!idToken) return { error: "Token do Google não informado" };
+
+  // Valida o token junto ao Google (não dependemos de Client ID no script)
+  let payload;
+  try {
+    const resp = UrlFetchApp.fetch(
+      "https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(idToken),
+      { muteHttpExceptions: true }
+    );
+    if (resp.getResponseCode() !== 200) {
+      return { error: "Token Google inválido. Tente fazer login novamente." };
+    }
+    payload = JSON.parse(resp.getContentText());
+  } catch (e) {
+    return { error: "Erro ao validar token Google: " + e.toString() };
+  }
+
+  const email = payload.email;
+  const name  = payload.name  || payload.email.split("@")[0];
+  const photo = payload.picture || "";
+
+  if (!email) return { error: "Não foi possível obter o e-mail da conta Google." };
+
+  // Verifica autorização
+  if (!isEmailAllowed(email)) {
+    return {
+      error: "E-mail não autorizado: " + email + "\nSolicite acesso ao administrador.",
+      code: "NOT_ALLOWED"
+    };
+  }
+
+  // Cria/atualiza perfil
+  upsertUser(email, name, photo);
+
+  // Gera e salva token de sessão
+  const token = Utilities.base64Encode(
+    email + "|" + new Date().getTime() + "|" + Math.random().toString(36)
+  );
+  PropertiesService.getScriptProperties().setProperty(
+    "tk_" + token,
+    JSON.stringify({ email, ts: new Date().getTime() })
+  );
+
+  return {
+    success : true,
+    token   : token,
+    email   : email,
+    isAdmin : isAdmin(email),
+    profile : getUserRow(email)
+  };
+}
+
+function checkAuth(body) {
+  const auth = verifyToken(body.token);
+  if (!auth.ok) return { ok: false };
+  return {
+    ok      : true,
+    email   : auth.user.email,
+    isAdmin : isAdmin(auth.user.email),
+    profile : getUserRow(auth.user.email)
+  };
+}
+
+function verifyToken(token) {
+  if (!token) return { ok: false };
+  try {
+    const raw = PropertiesService.getScriptProperties().getProperty("tk_" + token);
+    if (!raw) return { ok: false };
+    const d = JSON.parse(raw);
+    // Expira em 30 dias
+    if ((new Date().getTime() - d.ts) > 30 * 864e5) return { ok: false };
+    if (!isEmailAllowed(d.email)) return { ok: false };
+    return { ok: true, user: { email: d.email } };
+  } catch(e) { return { ok: false }; }
+}
+
+function isEmailAllowed(email) {
+  if (!email) return false;
+  const em = email.toLowerCase().trim();
+  if (em === SUPER_ADMIN_EMAIL.toLowerCase()) return true;
+  const sheet = sheet_(SH.ALLOWED);
+  const rows  = sheet.getDataRange().getValues();
+  return rows.some(r => String(r[0]).toLowerCase().trim() === em && r[1] !== "removido");
+}
+
+function isAdmin(email) {
+  if (!email) return false;
+  const em = email.toLowerCase().trim();
+  if (em === SUPER_ADMIN_EMAIL.toLowerCase()) return true;
+  const rows = sheet_(SH.ADMINS).getDataRange().getValues();
+  return rows.some(r => String(r[0]).toLowerCase().trim() === em);
+}
+
+function requireAdmin(user, fn) {
+  if (!isAdmin(user.email)) return { error: "Acesso restrito a administradores." };
+  return fn();
+}
+
+// ============================================================
+//  GESTÃO DE ACESSO
+// ============================================================
+function getAllowedEmails() {
+  const rows = sheet_(SH.ALLOWED).getDataRange().getValues();
+  return {
+    emails: rows.slice(1)
+      .filter(r => r[0] && r[1] !== "removido")
+      .map(r => ({ email:r[0], status:r[1], name:r[2]||"", addedAt:r[3]||"", addedBy:r[4]||"" }))
+  };
+}
+
+function addAllowedEmail(body, caller) {
+  if (!body.email) return { error: "E-mail obrigatório" };
+  const email = body.email.toLowerCase().trim();
+  const sh    = sheet_(SH.ALLOWED);
+  const rows  = sh.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]).toLowerCase().trim() === email) {
+      if (rows[i][1] === "removido") {
+        sh.getRange(i+1, 2).setValue("ativo");
+        return { success: true, reactivated: true };
+      }
+      return { error: "E-mail já está na lista." };
+    }
+  }
+  sh.appendRow([email, "ativo", body.name||"", new Date().toISOString(), caller.email]);
+  return { success: true };
+}
+
+function removeAllowedEmail(body) {
+  const email = (body.email||"").toLowerCase().trim();
+  if (email === SUPER_ADMIN_EMAIL.toLowerCase()) return { error: "Não é possível remover o super admin." };
+  const sh   = sheet_(SH.ALLOWED);
+  const rows = sh.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]).toLowerCase().trim() === email) {
+      sh.getRange(i+1, 2).setValue("removido");
+      return { success: true };
+    }
+  }
+  return { error: "E-mail não encontrado." };
+}
+
+function getAdmins() {
+  const rows = sheet_(SH.ADMINS).getDataRange().getValues();
+  const list = [{ email: SUPER_ADMIN_EMAIL, name: "Super Admin", isSuper: true }];
+  rows.slice(1).filter(r => r[0] && r[0] !== SUPER_ADMIN_EMAIL)
+    .forEach(r => list.push({ email:r[0], name:r[1]||"", addedAt:r[2]||"" }));
+  return { admins: list };
+}
+
+function addAdmin(body) {
+  const email = (body.email||"").toLowerCase().trim();
+  if (!isEmailAllowed(email)) return { error: "Adicione o e-mail na lista de autorizados primeiro." };
+  const sh   = sheet_(SH.ADMINS);
+  const rows = sh.getDataRange().getValues();
+  if (rows.some(r => String(r[0]).toLowerCase().trim() === email)) return { error: "Já é administrador." };
+  sh.appendRow([email, body.name||"", new Date().toISOString()]);
+  return { success: true };
+}
+
+function removeAdmin(body) {
+  const email = (body.email||"").toLowerCase().trim();
+  if (email === SUPER_ADMIN_EMAIL.toLowerCase()) return { error: "Não é possível remover o super admin." };
+  const sh   = sheet_(SH.ADMINS);
+  const rows = sh.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]).toLowerCase().trim() === email) {
+      sh.deleteRow(i + 1);
+      return { success: true };
+    }
+  }
+  return { error: "Admin não encontrado." };
+}
+
+function getAllUsers() {
+  const rows = sheet_(SH.USERS).getDataRange().getValues();
+  return {
+    users: rows.slice(1).filter(r => r[0]).map(r => ({
+      email:r[0], name:r[1]||"", photo:r[2]||"", createdAt:r[3]||"", lastLogin:r[4]||""
+    }))
+  };
+}
+
+// ============================================================
+//  PERFIS
+// ============================================================
+function upsertUser(email, name, photo) {
+  const sh   = sheet_(SH.USERS);
+  const rows = sh.getDataRange().getValues();
+  const now  = new Date().toISOString();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]).toLowerCase() === email.toLowerCase()) {
+      if (name)  sh.getRange(i+1, 2).setValue(name);
+      if (photo) sh.getRange(i+1, 3).setValue(photo);
+      sh.getRange(i+1, 5).setValue(now); // lastLogin
+      return;
+    }
+  }
+  sh.appendRow([email, name, photo, now, now]);
+}
+
+function getUserRow(email) {
+  const rows = sheet_(SH.USERS).getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]).toLowerCase() === email.toLowerCase()) {
+      return { email:rows[i][0], name:rows[i][1]||"", photo:rows[i][2]||"", createdAt:rows[i][3]||"", lastLogin:rows[i][4]||"" };
+    }
+  }
+  return { email, name:"", photo:"", createdAt:"", lastLogin:"" };
+}
+
+function updateProfile(user, body) {
+  const sh   = sheet_(SH.USERS);
+  const rows = sh.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]).toLowerCase() === user.email.toLowerCase()) {
+      if (body.name  !== undefined) sh.getRange(i+1, 2).setValue(body.name);
+      if (body.photo !== undefined) sh.getRange(i+1, 3).setValue(body.photo);
+      return { success: true };
+    }
+  }
+  return { error: "Usuário não encontrado." };
+}
+
+// ============================================================
+//  DESPESAS
+// ============================================================
+function getExpenses(body) {
+  const sh   = sheet_(SH.EXPENSES);
+  const rows = sh.getDataRange().getValues();
+  if (rows.length <= 1) return { expenses: [] };
+
+  let list = rows.slice(1).filter(r => r[0]).map(r => ({
+    id          : String(r[0]),
+    desc        : String(r[1]||""),
+    cat         : String(r[2]||"outros"),
+    val         : parseFloat(r[3]) || 0,
+    payer       : String(r[4]||""),
+    pctMe       : parseInt(r[5]) || 50,
+    date        : String(r[6]||""),
+    addedBy     : String(r[7]||""),
+    settled     : r[8] === true || String(r[8]).toUpperCase() === "TRUE",
+    settledAt   : String(r[9]||""),
+    settledMonth: String(r[10]||"")
+  }));
+
+  if (body.month && body.year) {
+    const pfx = body.year + "-" + String(body.month).padStart(2,"0");
+    list = list.filter(e => e.date.startsWith(pfx));
+  }
+  if (body.startDate) list = list.filter(e => e.date >= body.startDate);
+  if (body.endDate)   list = list.filter(e => e.date <= body.endDate);
+
+  return { expenses: list };
+}
+
+function addExpense(user, body) {
+  const id = "e" + Date.now();
+  sheet_(SH.EXPENSES).appendRow([
+    id, body.desc, body.cat, body.val,
+    body.payer, body.pctMe, body.date, user.email,
+    false, "", ""
+  ]);
+  return { success: true, id };
+}
+
+function editExpense(user, body) {
+  const sh   = sheet_(SH.EXPENSES);
+  const rows = sh.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(body.id)) {
+      sh.getRange(i+1, 2, 1, 6).setValues([[
+        body.desc, body.cat, body.val, body.payer, body.pctMe, body.date
+      ]]);
+      return { success: true };
+    }
+  }
+  return { error: "Despesa não encontrada." };
+}
+
+function deleteExpense(user, body) {
+  const sh   = sheet_(SH.EXPENSES);
+  const rows = sh.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(body.id)) {
+      sh.deleteRow(i + 1);
+      return { success: true };
+    }
+  }
+  return { error: "Despesa não encontrada." };
+}
+
+// ============================================================
+//  QUITAÇÕES — marca mês E dá baixa linha a linha
+// ============================================================
+function getSettlements() {
+  const rows = sheet_(SH.SETTLE).getDataRange().getValues();
+  return {
+    settlements: rows.slice(1).filter(r => r[0]).map(r => ({
+      month        : String(r[0]),
+      settledDate  : String(r[1]||""),
+      settledBy    : String(r[2]||""),
+      totalValue   : parseFloat(r[3]) || 0,
+      expenseCount : parseInt(r[4])   || 0
+    }))
+  };
+}
+
+function settleMonth(user, body) {
+  const mk = body.month;
+  if (!mk) return { error: "Mês não informado (formato: AAAA-MM)." };
+
+  const setSheet = sheet_(SH.SETTLE);
+  const setRows  = setSheet.getDataRange().getValues();
+  if (setRows.some(r => String(r[0]) === mk)) {
+    return { error: "Este mês já foi quitado.", alreadyDone: true };
+  }
+
+  const expSheet = sheet_(SH.EXPENSES);
+  const expRows  = expSheet.getDataRange().getValues();
+  const today    = new Date().toISOString().split("T")[0];
+  let count = 0, total = 0;
+
+  for (let i = 1; i < expRows.length; i++) {
+    const r = expRows[i];
+    if (!r[0]) continue;
+    if (!String(r[6]).startsWith(mk)) continue;
+    if (r[8] === true || String(r[8]).toUpperCase() === "TRUE") continue;
+    // Colunas 9,10,11 = settled, settledAt, settledMonth
+    expSheet.getRange(i+1, 9, 1, 3).setValues([[true, today, mk]]);
+    total += parseFloat(r[3]) || 0;
+    count++;
+  }
+
+  setSheet.appendRow([mk, today, user.email, total, count]);
+  return { success: true, settledCount: count, totalValue: total };
+}
+
+// ============================================================
+//  RELATÓRIO
+// ============================================================
+function getReportData(body) {
+  const rows = sheet_(SH.EXPENSES).getDataRange().getValues();
+  if (rows.length <= 1) return { series: [], summary: { total:0, settled:0, pending:0, count:0, byCat:{} } };
+
+  let exps = rows.slice(1).filter(r => r[0]).map(r => ({
+    id      : String(r[0]),
+    cat     : String(r[2]||"outros"),
+    val     : parseFloat(r[3]) || 0,
+    payer   : String(r[4]||""),
+    pctMe   : parseInt(r[5]) || 50,
+    date    : String(r[6]||""),
+    addedBy : String(r[7]||""),
+    settled : r[8] === true || String(r[8]).toUpperCase() === "TRUE"
+  }));
+
+  if (body.startDate) exps = exps.filter(e => e.date >= body.startDate);
+  if (body.endDate)   exps = exps.filter(e => e.date <= body.endDate);
+
+  const gran    = body.granularity || "month";
+  const grouped = {};
+  exps.forEach(e => {
+    const k = periodKey(e.date, gran);
+    if (!grouped[k]) grouped[k] = [];
+    grouped[k].push(e);
   });
 
-  google.accounts.id.prompt(() => {});
+  const series = Object.keys(grouped).sort().map(period => {
+    const g       = grouped[period];
+    const total   = g.reduce((s,e) => s + e.val, 0);
+    const settled = g.filter(e => e.settled).reduce((s,e) => s + e.val, 0);
+    const byCat   = {}, byUser = {}, byPayer = {};
+    g.forEach(e => {
+      if (!byCat[e.cat])    byCat[e.cat]    = { total:0, settled:0, count:0 };
+      byCat[e.cat].total   += e.val;
+      byCat[e.cat].settled += e.settled ? e.val : 0;
+      byCat[e.cat].count++;
+      const u = e.addedBy || "?";
+      if (!byUser[u])  byUser[u]  = { total:0, count:0 };
+      byUser[u].total += e.val; byUser[u].count++;
+      const p = e.payer || "?";
+      if (!byPayer[p]) byPayer[p] = 0;
+      byPayer[p] += e.val;
+    });
+    return { period, label: periodLabel(period, gran), total, settled, pending: total-settled, count: g.length, byCat, byUser, byPayer };
+  });
+
+  const sumTotal   = exps.reduce((s,e) => s+e.val, 0);
+  const sumSettled = exps.filter(e => e.settled).reduce((s,e) => s+e.val, 0);
+  const sumByCat   = {};
+  exps.forEach(e => {
+    if (!sumByCat[e.cat]) sumByCat[e.cat] = { total:0, settled:0, count:0 };
+    sumByCat[e.cat].total   += e.val;
+    sumByCat[e.cat].settled += e.settled ? e.val : 0;
+    sumByCat[e.cat].count++;
+  });
+
+  return { series, summary: { total: sumTotal, settled: sumSettled, pending: sumTotal-sumSettled, count: exps.length, byCat: sumByCat } };
 }
 
-async function onGoogleToken(response) {
-  const idToken = response.credential;
-  if (!idToken) { setLoginStatus('Falha ao obter token. Tente novamente.'); return; }
-  
-  showLoad('Autenticando...');
-  try {
-    const res = await api({ action: 'googleLogin', idToken });
-    if (!res.ok) {
-      setLoginStatus(res.error || 'Acesso negado.');
-      return;
-    }
-    localStorage.setItem(TOKEN_KEY, res.token);
-    localStorage.setItem(EMAIL_KEY, res.email);
-    S.token = res.token;
-    S.email = res.email;
-    S.profile = res.profile || {};
-    S.isAdmin = res.isAdmin || false;
-    setLoginStatus('');
-    enterApp();
-  } catch(err) {
-    setLoginStatus('Erro de conexão. Verifique a URL do script.');
-    console.error('onGoogleToken error:', err);
-  } finally {
-    hideLoad();
-  }
+function periodKey(d, gran) {
+  if (!d || d.length < 7) return "0000";
+  const [y,m] = d.split("-").map(Number);
+  if (gran==="day")      return d.substring(0,10);
+  if (gran==="month")    return y+"-"+String(m).padStart(2,"0");
+  if (gran==="bimonth")  return y+"-B"+Math.ceil(m/2);
+  if (gran==="quarter")  return y+"-Q"+Math.ceil(m/3);
+  if (gran==="semester") return y+"-S"+Math.ceil(m/6);
+  if (gran==="year")     return String(y);
+  return y+"-"+String(m).padStart(2,"0");
 }
 
-function setLoginStatus(msg) {
-  const el = document.getElementById('login-status');
-  if (el) el.textContent = msg;
-}
-
-async function tryAutoLogin() {
-  showLoad('Verificando sessão...');
-  try {
-    const res = await api({ action: 'checkAuth', token: S.token });
-    if (!res.ok) {
-      localStorage.removeItem(TOKEN_KEY);
-      S.token = '';
-      hideLoad();
-      show('scr-login');
-      setTimeout(initGSI, 100);
-      return;
-    }
-    S.profile = res.profile || {};
-    S.isAdmin = res.isAdmin || false;
-    enterApp();
-  } catch(e) {
-    hideLoad();
-    show('scr-login');
-    setTimeout(initGSI, 100);
-  } finally {
-    hideLoad();
-  }
-}
-
-function signOut() {
-  if(!confirm('Deseja sair?')) return;
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(EMAIL_KEY);
-  location.reload();
-}
-
-function enterApp() {
-  loadSeenIds();
-  show('scr-main');
-  updateTopbar();
-  if (S.isAdmin) document.getElementById('nav-admin').style.display='flex';
-  fetchAll();
-  renderTab();
-}
-
-function updateTopbar() {
-  const av = document.getElementById('topav');
-  const nm = document.getElementById('topname');
-  nm.textContent = S.profile.name ? S.profile.name.split(' ')[0] : S.email.split('@')[0];
-  if (S.profile.photo) {
-    av.innerHTML = `<img src="${S.profile.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover"/>`;
-  } else {
-    av.textContent = (S.profile.name||S.email).substring(0,2).toUpperCase();
-  }
+function periodLabel(key, gran) {
+  const M = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  if (gran==="day")      { const p=key.split("-"); return p[2]+"/"+p[1]+"/"+p[0]; }
+  if (gran==="month")    { const p=key.split("-"); return M[parseInt(p[1])-1]+"/"+p[0]; }
+  if (gran==="bimonth")  { const p=key.split("-B"); return "Bim "+p[1]+"/"+p[0]; }
+  if (gran==="quarter")  { const p=key.split("-Q"); return "Tri "+p[1]+"/"+p[0]; }
+  if (gran==="semester") { const p=key.split("-S"); return "Sem "+p[1]+"/"+p[0]; }
+  return key;
 }
 
 // ============================================================
-//  API
+//  UTILITÁRIOS
 // ============================================================
-async function api(body) {
-  const r = await fetch(S.url, { method:'POST', body: JSON.stringify(body) });
-  return r.json();
+function sheet_(name) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh   = ss.getSheetByName(name);
+  if (!sh) {
+    // Cria automaticamente se não existir (segurança extra)
+    sh = ss.insertSheet(name);
+    if (HEADERS[name]) {
+      sh.appendRow(HEADERS[name]);
+      sh.getRange(1, 1, 1, HEADERS[name].length)
+        .setBackground("#534AB7").setFontColor("#fff").setFontWeight("bold");
+    }
+    Logger.log("Aba criada automaticamente: " + name);
+  }
+  return sh;
 }
 
-async function fetchAll() {
-  showLoad('Sincronizando...');
-  try {
-    const [eRes, sRes] = await Promise.all([
-      api({ action:'getExpenses', token:S.token }),
-      api({ action:'getSettlements', token:S.token })
-    ]);
-    S.expenses    = eRes.expenses    || [];
-    S.settlements = sRes.settlements || [];
-    updateNotifCount();
-  } catch(e) { toast('Erro ao sincronizar'); }
-  finally { hideLoad(); }
+function json(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
 }
-
-// ... Restante das funções de renderização e ações ( Expenses, Balance, History, etc ) ...
-// (O código completo do app.html original deve continuar aqui para manter funcionalidade)
-
-function renderTab() {
-  const cont = document.getElementById('main-scroll');
-  document.getElementById('fab-add').style.display = S.tab==='expenses'?'flex':'none';
-  if (S.tab==='expenses') cont.innerHTML = renderExpenses();
-  else if (S.tab==='balance') cont.innerHTML = renderBalance();
-  else if (S.tab==='history') cont.innerHTML = renderHistory();
-  else if (S.tab==='report')  cont.innerHTML = renderReport();
-  else if (S.tab==='admin')   cont.innerHTML = renderAdmin();
-  else if (S.tab==='notif')   cont.innerHTML = renderNotif();
-  else if (S.tab==='profile') cont.innerHTML = renderProfile();
-  cont.scrollTop = 0;
-}
-
-// Utils
-function cat(id)    { return CATS.find(c=>c.id===id)||CATS[5]; }
-function fmt(v)     { return 'R$\u00A0'+Number(v||0).toFixed(2).replace('.',','); }
-function fmtD(s)    { return String(s||'').split('T')[0].split('-').reverse().join('/'); }
-function todayStr() { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function mkey(y,m)  { return y+'-'+String(m).padStart(2,'0'); }
-function esc(s)     { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function showLoad(msg){ document.getElementById('lmsg').textContent=msg||'Carregando...'; document.getElementById('lov').style.display='flex'; }
-function hideLoad()   { document.getElementById('lov').style.display='none'; }
-function toast(msg){
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.classList.add('on');
-  setTimeout(()=>el.classList.remove('on'),2800);
-}
-
-// Service Worker
-if('serviceWorker' in navigator){
-  const sw=`const C='fc-v2';self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(['.']))));self.addEventListener('fetch',e=>{if(e.request.url.includes('script.google.com'))return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});`;
-  const b=new Blob([sw],{type:'application/javascript'});
-  navigator.serviceWorker.register(URL.createObjectURL(b)).catch(()=>{});
-}
-</script>
-</body>
-</html>
