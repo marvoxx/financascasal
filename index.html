@@ -8,1238 +8,1285 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="Finanças"/>
 <title>Finanças do Casal</title>
+<!-- Chart.js para relatórios -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client"></script>
 <style>
 :root{
   --p:#534AB7;--pl:#EEEDFE;--pd:#3C3489;
   --g:#1D9E75;--gl:#E1F5EE;--gd:#085041;
-  --r:#993C1D;--rl:#FAECE7;
-  --a:#BA7517;--al:#FAEEDA;
-  --bl:#E6F1FB;--grl:#F1EFE8;--rl2:#FCEBEB;
+  --r:#993C1D;--a:#BA7517;--al:#FAEEDA;
   --bg:#f2f2f7;--surf:#fff;--bord:rgba(0,0,0,.1);
   --t:#1a1a1a;--t2:#666;--t3:#999;
-  --rad:14px;--rad-s:8px;--rad-m:10px;
+  --rad:14px;--rads:8px;
 }
-@media(prefers-color-scheme:dark){
-  :root{--bg:#0e0e10;--surf:#1c1c1e;--bord:rgba(255,255,255,.1);--t:#f2f2f7;--t2:#ababab;--t3:#555;
-    --pl:#2a2660;--gl:#0d3d2e;--al:#3a2a08;--bl:#0c2340;--grl:#2a2a2a;--rl2:#3a1010;}
-}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0e0e10;--surf:#1c1c1e;--bord:rgba(255,255,255,.12);
+  --t:#f2f2f7;--t2:#ababab;--t3:#555;
+  --pl:#2a2660;--gl:#0d3d2e;--al:#3a2a08;
+}}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+html,body{height:100%;background:var(--bg);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px}
 .scr{display:none;flex-direction:column;height:100vh;overflow:hidden}
 .scr.on{display:flex}
-.scroll{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch}
+.scroll{flex:1;overflow-y:auto;padding:14px 14px 80px;-webkit-overflow-scrolling:touch}
+
 /* TOPBAR */
-.topbar{background:var(--surf);border-bottom:.5px solid var(--bord);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px}
-.topbar h1{font-size:17px;font-weight:700;color:var(--t)}
-.tbr{display:flex;gap:6px;align-items:center}
-.ib{background:none;border:.5px solid var(--bord);border-radius:var(--rad-s);padding:5px 10px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;position:relative;white-space:nowrap}
+.top{background:var(--surf);border-bottom:.5px solid var(--bord);padding:11px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.top h1{font-size:16px;font-weight:700}
+.top-r{display:flex;gap:6px;align-items:center}
+.ib{background:none;border:.5px solid var(--bord);border-radius:var(--rads);padding:5px 10px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;position:relative}
 .ib:active{opacity:.7}
-.nb{position:absolute;top:-5px;right:-5px;background:#D85A30;color:#fff;font-size:10px;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+.badge-dot{position:absolute;top:-4px;right:-4px;background:#D85A30;color:#fff;font-size:9px;min-width:15px;height:15px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+
 /* BOTTOM NAV */
 .bnav{background:var(--surf);border-top:.5px solid var(--bord);display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
-.nb2{flex:1;padding:8px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--t3);font-size:10px;font-weight:500}
-.nb2.on{color:var(--p)}
-.ni{font-size:19px}
-/* LOGIN */
-.lw{display:flex;flex-direction:column;justify-content:center;padding:28px 18px;gap:12px;flex:1}
-.ll{font-size:54px;text-align:center;margin-bottom:4px}
-.lt{font-size:22px;font-weight:800;text-align:center;color:var(--t)}
-.ls{font-size:14px;color:var(--t2);text-align:center;margin-bottom:4px}
-.gc{background:#fff;border:1px solid #dadce0;border-radius:var(--rad);padding:13px 18px;display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer;font-size:15px;font-weight:600;color:#3c4043;box-shadow:0 1px 4px rgba(0,0,0,.1)}
-.gc:active{transform:scale(.98)}
-.gc svg{width:22px;height:22px;flex-shrink:0}
+.nv{flex:1;padding:8px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--t3);font-size:10px;font-weight:500}
+.nv.on{color:var(--p)}
+.ni{font-size:20px}
+
 /* CARDS */
-.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.mc{background:var(--surf);border-radius:var(--rad);padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card{background:var(--surf);border-radius:var(--rad);padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .ml{font-size:12px;color:var(--t2);margin-bottom:3px}
-.mv{font-size:20px;font-weight:800;color:var(--t)}
+.mv{font-size:21px;font-weight:800}
 .mv.pos{color:#0F6E56}.mv.neg{color:var(--r)}
-/* MONTH NAV */
+.sec{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+
+/* MÊS NAV */
 .mnav{background:var(--surf);border-radius:var(--rad);padding:9px 12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.mnav button{background:none;border:none;font-size:22px;color:var(--t2);padding:0 6px;cursor:pointer}
-.mnl{font-size:15px;font-weight:700;color:var(--t)}
+.mnav button{background:none;border:none;font-size:22px;color:var(--t2);padding:0 8px;cursor:pointer}
+.mnl{font-size:15px;font-weight:700}
+
 /* EXPENSE ITEMS */
-.sec{font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}
 .elist{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
 .ei{background:var(--surf);border:.5px solid var(--bord);border-radius:var(--rad);padding:12px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04)}
 .ei:active{transform:scale(.99)}
-.ei.new{border-color:var(--p)}
-.ei.settled{opacity:.6}
+.ei.is-new{border-color:var(--p)}
+.ei.is-settled{opacity:.55}
 .erow{display:flex;align-items:center;gap:9px}
-.ci{width:36px;height:36px;border-radius:var(--rad-s);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ci{width:36px;height:36px;border-radius:var(--rads);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .ei2{flex:1;min-width:0}
-.en{font-size:14px;font-weight:700;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.en{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .em{font-size:12px;color:var(--t2);display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-top:2px}
 .ea{text-align:right;flex-shrink:0}
-.eat{font-size:14px;font-weight:700;color:var(--t)}
+.eat{font-size:14px;font-weight:700}
 .eas{font-size:11px;color:var(--t2)}
-.sd{display:none;margin-top:9px;border-top:.5px solid var(--bord);padding-top:9px}
-.sd.on{display:block}
+.edet{display:none;margin-top:9px;border-top:.5px solid var(--bord);padding-top:9px}
+.edet.on{display:block}
 .sr{display:flex;align-items:center;gap:7px;margin-bottom:6px}
 .sn{font-size:13px;color:var(--t2);flex:1}
-.sp{font-size:13px;font-weight:700;color:var(--t);width:32px;text-align:right}
+.sp{font-size:13px;font-weight:700;width:32px;text-align:right}
 .sv{font-size:12px;color:var(--t2);width:60px;text-align:right}
 .pt{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
 .pme{height:100%;border-radius:3px;background:var(--p)}
 .psp{height:100%;border-radius:3px;background:var(--g)}
 .eacts{display:flex;gap:6px;margin-top:9px}
-.eb{flex:1;padding:7px;font-size:12px;font-weight:600;border-radius:var(--rad-s);cursor:pointer;border:.5px solid var(--bord);background:transparent;color:var(--t2)}
-.eb.del{border-color:#F0997B;color:var(--r)}
+.ebtn{flex:1;padding:7px;font-size:12px;font-weight:600;border-radius:var(--rads);cursor:pointer;border:.5px solid var(--bord);background:transparent;color:var(--t2)}
+.ebtn.del{border-color:#F0997B;color:var(--r)}
+
 /* FAB */
-.fab{position:fixed;bottom:76px;right:16px;width:54px;height:54px;border-radius:27px;background:var(--p);border:none;color:#fff;font-size:26px;cursor:pointer;box-shadow:0 4px 14px rgba(83,74,183,.4);display:flex;align-items:center;justify-content:center;z-index:50}
+.fab{position:fixed;bottom:72px;right:16px;width:54px;height:54px;border-radius:27px;background:var(--p);border:none;color:#fff;font-size:26px;cursor:pointer;box-shadow:0 4px 14px rgba(83,74,183,.4);display:flex;align-items:center;justify-content:center;z-index:50}
 .fab:active{transform:scale(.95)}
+
 /* MODAL */
 .mbg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center}
-.mod{background:var(--surf);border-radius:20px 20px 0 0;padding:18px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto}
+.mod{background:var(--surf);border-radius:20px 20px 0 0;padding:18px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
 .mh{width:38px;height:4px;background:var(--bord);border-radius:2px;margin:0 auto 14px}
-.mt{font-size:17px;font-weight:700;margin-bottom:14px;color:var(--t)}
+.mt{font-size:17px;font-weight:700;margin-bottom:14px}
 .fg{margin-bottom:12px}
 .fl{font-size:13px;font-weight:600;color:var(--t2);margin-bottom:5px;display:block}
-.fi{width:100%;padding:11px 13px;border:.5px solid var(--bord);border-radius:var(--rad-s);font-size:15px;background:var(--surf);color:var(--t);outline:none}
+.fi{width:100%;padding:11px 13px;border:.5px solid var(--bord);border-radius:var(--rads);font-size:15px;background:var(--surf);color:var(--t);outline:none}
 .fi:focus{border-color:var(--p)}
 .cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.cb{padding:9px 3px;border:.5px solid var(--bord);border-radius:var(--rad-s);font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;background:var(--surf);text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px}
+.cb{padding:9px 3px;border:.5px solid var(--bord);border-radius:var(--rads);font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;background:var(--surf);text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px}
 .cb .ce{font-size:18px}
 .cb.on{border:2px solid var(--p);color:var(--p);background:var(--pl)}
 .pr{display:flex;gap:8px}
-.pb{flex:1;padding:10px;border:.5px solid var(--bord);border-radius:var(--rad-s);font-size:14px;font-weight:600;cursor:pointer;background:var(--surf);color:var(--t2);display:flex;align-items:center;justify-content:center;gap:7px}
+.pb{flex:1;padding:10px;border:.5px solid var(--bord);border-radius:var(--rads);font-size:14px;font-weight:600;cursor:pointer;background:var(--surf);color:var(--t2);display:flex;align-items:center;justify-content:center;gap:7px}
 .pb.me{border:2px solid var(--p);color:var(--p);background:var(--pl)}
 .pb.sp{border:2px solid var(--g);color:var(--gd);background:var(--gl)}
 .slg{margin-bottom:12px}
 .sll{display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin-bottom:5px}
-.slv{display:flex;justify-content:space-between;font-size:15px;font-weight:700;color:var(--t);margin-top:5px}
+.slv{display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin-top:5px}
 input[type=range]{width:100%;accent-color:var(--p)}
 .macts{display:flex;gap:8px;margin-top:14px}
 .bc{flex:1;padding:12px;border:.5px solid var(--bord);border-radius:var(--rad);font-size:15px;font-weight:600;color:var(--t2);background:transparent;cursor:pointer}
 .bs{flex:2;padding:12px;border:none;border-radius:var(--rad);font-size:15px;font-weight:700;color:#fff;background:var(--p);cursor:pointer}
 .bs:active{transform:scale(.98)}
-/* BALANCE */
-.bc2{background:var(--surf);border-radius:var(--rad);padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.bb{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin:8px 0}
-.bf{height:100%;border-radius:4px;background:var(--p)}
-.bstat{font-size:14px;text-align:center;padding:11px;background:var(--bg);border-radius:var(--rad-s);margin-top:8px}
-.bq{width:100%;padding:12px;margin-top:10px;border:none;border-radius:var(--rad);font-size:15px;font-weight:700;color:#fff;background:var(--g);cursor:pointer}
-.bq:disabled{background:var(--bg);color:var(--t3);cursor:default}
-.setb{background:var(--gl);border-radius:var(--rad-s);padding:9px;font-size:13px;color:var(--gd);margin-top:9px;text-align:center;font-weight:600}
+.bs.green{background:var(--g)}
+
 /* AVATAR */
-.av{border-radius:50%;object-fit:cover;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.av{border-radius:50%;object-fit:cover;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;overflow:hidden}
 .av-p{background:var(--pl);color:var(--pd)}
 .av-g{background:var(--gl);color:var(--gd)}
+
 /* BADGES */
-.badge{font-size:11px;padding:2px 7px;border-radius:20px;font-weight:600}
-.bme{background:var(--pl);color:var(--pd)}
-.bsp{background:var(--gl);color:var(--gd)}
-.bnew{background:var(--al);color:#633806}
-.bset{background:var(--gl);color:var(--gd)}
-/* LOADING/TOAST */
+.bge{font-size:11px;padding:2px 7px;border-radius:20px;font-weight:600;display:inline-block}
+.bge-p{background:var(--pl);color:var(--pd)}
+.bge-g{background:var(--gl);color:var(--gd)}
+.bge-new{background:var(--al);color:#412402}
+.bge-set{background:var(--gl);color:var(--gd)}
+
+/* LOADING / TOAST */
 .lov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;display:flex;align-items:center;justify-content:center}
-.lbox{background:var(--surf);border-radius:var(--rad);padding:22px 28px;text-align:center;font-size:15px;font-weight:600;color:var(--t)}
+.lbox{background:var(--surf);border-radius:var(--rad);padding:22px 30px;text-align:center;font-size:15px;font-weight:600}
 .lspin{width:30px;height:30px;border:3px solid var(--bord);border-top-color:var(--p);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.toast{position:fixed;bottom:86px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:9px 18px;border-radius:30px;font-size:14px;font-weight:500;z-index:600;opacity:0;transition:opacity .3s;white-space:nowrap}
+.toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:9px 18px;border-radius:30px;font-size:14px;font-weight:500;z-index:600;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none}
 .toast.on{opacity:1}
-.empty{text-align:center;padding:36px 20px;color:var(--t2);font-size:15px;line-height:1.6}
+.empty{text-align:center;padding:36px 20px;color:var(--t2);font-size:14px;line-height:1.7}
+
 /* SETUP */
-.setup{display:flex;flex-direction:column;justify-content:center;padding:24px 18px;gap:14px;flex:1}
-.sbanner{background:var(--pl);border:1px solid var(--p);border-radius:var(--rad);padding:13px;font-size:13px;color:var(--pd);line-height:1.5}
-.sbanner strong{display:block;font-size:14px;margin-bottom:4px}
-.sbtn{width:100%;padding:13px;background:var(--p);color:#fff;border:none;border-radius:var(--rad);font-size:15px;font-weight:700;cursor:pointer}
-/* ADMIN */
-.atab{display:flex;gap:4px;background:var(--bg);border-radius:var(--rad-m);padding:3px;margin-bottom:12px}
-.at{flex:1;padding:7px;font-size:13px;font-weight:600;text-align:center;border-radius:7px;cursor:pointer;color:var(--t2);border:none;background:transparent}
-.at.on{background:var(--surf);color:var(--t);box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.acard{background:var(--surf);border:.5px solid var(--bord);border-radius:var(--rad);padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
-.acard-info{flex:1;min-width:0}
-.acard-info h3{font-size:14px;font-weight:700;color:var(--t)}
-.acard-info p{font-size:12px;color:var(--t2);margin-top:2px}
-.adel{background:none;border:none;color:var(--r);font-size:13px;font-weight:600;cursor:pointer;padding:4px 8px}
-/* PROFILE */
-.profav{width:80px;height:80px;border-radius:40px;margin:0 auto 12px;display:block;cursor:pointer;position:relative}
-.profav-wrap{position:relative;width:80px;margin:0 auto 12px}
-.profav-img{width:80px;height:80px;border-radius:40px;object-fit:cover;display:block;border:3px solid var(--p)}
-.profav-edit{position:absolute;bottom:0;right:0;background:var(--p);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer}
+.setup{display:flex;flex-direction:column;justify-content:center;padding:28px 18px;gap:14px;flex:1;min-height:100%}
+
+/* BALANCE */
+.bbar{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin:8px 0}
+.bfill{height:100%;border-radius:4px;background:var(--p)}
+.bstat{font-size:14px;text-align:center;padding:11px;background:var(--bg);border-radius:var(--rads);margin-top:8px}
+.setb{background:var(--gl);border-radius:var(--rads);padding:9px;font-size:13px;color:var(--gd);margin-top:9px;text-align:center;font-weight:600}
+
 /* REPORT */
-.rfilters{background:var(--surf);border-radius:var(--rad);padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.rfl{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
-.rf{flex:1;min-width:140px}
-.rfl label{font-size:12px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px}
-.rsel{width:100%;padding:8px 10px;border:.5px solid var(--bord);border-radius:var(--rad-s);font-size:14px;background:var(--surf);color:var(--t);outline:none}
-.rtabs{display:flex;gap:4px;background:var(--bg);border-radius:var(--rad-m);padding:3px;margin-bottom:12px}
-.rt{flex:1;padding:7px 4px;font-size:12px;font-weight:600;text-align:center;border-radius:7px;cursor:pointer;color:var(--t2);border:none;background:transparent}
-.rt.on{background:var(--surf);color:var(--t);box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.chart-wrap{background:var(--surf);border-radius:var(--rad);padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.rtabs,.atabs{display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:3px;margin-bottom:12px}
+.rt,.at{flex:1;padding:7px 4px;font-size:12px;font-weight:600;text-align:center;border-radius:7px;cursor:pointer;color:var(--t2);border:none;background:transparent}
+.rt.on,.at.on{background:var(--surf);color:var(--t);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:.5px solid var(--bord);background:var(--surf);color:var(--t2);margin:2px}
+.pill.on{background:var(--pl);color:var(--p);border-color:var(--p)}
+select.rsel{width:100%;padding:8px 10px;border:.5px solid var(--bord);border-radius:var(--rads);font-size:14px;background:var(--surf);color:var(--t);outline:none}
 .rtable{width:100%;border-collapse:collapse;font-size:13px}
 .rtable th{text-align:left;padding:8px;font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;border-bottom:.5px solid var(--bord)}
-.rtable td{padding:8px;border-bottom:.5px solid var(--bord);color:var(--t)}
+.rtable td{padding:8px;border-bottom:.5px solid var(--bord)}
 .rtable tr:last-child td{border-bottom:none}
-.dim-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:.5px solid var(--bord);background:var(--surf);color:var(--t2);margin:2px}
-.dim-pill.on{background:var(--pl);color:var(--p);border-color:var(--p)}
+
+/* ADMIN */
+.acard{background:var(--surf);border:.5px solid var(--bord);border-radius:var(--rad);padding:13px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.acard-info{flex:1;min-width:0}
+.acard-info h3{font-size:14px;font-weight:700}
+.acard-info p{font-size:12px;color:var(--t2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adel{background:none;border:none;color:var(--r);font-size:13px;font-weight:600;cursor:pointer;padding:4px 8px;flex-shrink:0}
+
+/* PROFILE */
+.profwrap{position:relative;width:80px;margin:0 auto 14px}
+.profimg{width:80px;height:80px;border-radius:40px;object-fit:cover;display:block;border:3px solid var(--p)}
+.profedit{position:absolute;bottom:0;right:0;background:var(--p);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;border:none}
 </style>
 </head>
 <body>
 
-<!-- SETUP -->
+<!-- ============ TELA SETUP ============ -->
 <div id="scr-setup" class="scr on">
   <div class="scroll">
     <div class="setup">
-      <div style="text-align:center"><div style="font-size:52px">💰</div>
-        <h1 style="font-size:22px;font-weight:800;margin-top:6px">Finanças do Casal</h1>
-        <p style="font-size:14px;color:var(--t2);margin-top:5px">Configure a URL do Apps Script</p>
+      <div style="text-align:center">
+        <div style="font-size:52px">💰</div>
+        <h1 style="font-size:22px;font-weight:800;margin-top:8px">Finanças do Casal</h1>
+        <p style="font-size:14px;color:var(--t2);margin-top:6px">Cole a URL do seu Google Apps Script</p>
       </div>
-      <div class="sbanner">
-        <strong>Como obter a URL?</strong>
-        Siga o arquivo <code>GUIA.md</code> para criar o Google Script. Depois cole a URL de implantação aqui.
+      <div style="background:var(--pl);border-radius:var(--rads);padding:13px;font-size:13px;color:var(--pd);line-height:1.6">
+        <strong style="display:block;margin-bottom:4px">Como obter a URL?</strong>
+        No Google Sheets: Extensões → Apps Script → Implantar → Nova implantação → App da Web → copie a URL.
       </div>
       <div class="fg">
         <label class="fl">URL do Google Apps Script</label>
-        <input class="fi" id="setup-url" placeholder="https://script.google.com/macros/s/..." type="url"/>
+        <input class="fi" id="inp-url" type="url" placeholder="https://script.google.com/macros/s/..."/>
       </div>
-      <button class="sbtn" onclick="saveConfig()">Salvar e Continuar</button>
-      <p style="font-size:12px;color:var(--t3);text-align:center">Salvo apenas no seu dispositivo</p>
+      <button class="bs" onclick="salvarConfig()">Salvar e continuar</button>
+      <p style="font-size:12px;color:var(--t3);text-align:center">A URL é salva apenas neste dispositivo</p>
     </div>
   </div>
 </div>
 
-<!-- LOGIN -->
+<!-- ============ TELA LOGIN ============ -->
 <div id="scr-login" class="scr">
   <div class="scroll">
-    <div class="lw">
-      <div class="ll">💰</div>
-      <h1 class="lt">Finanças do Casal</h1>
-      <p class="ls">Entre com sua conta Google</p>
-      <button class="gc" onclick="googleSignIn()">
-        <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-        Entrar com Google
-      </button>
-      <button onclick="changeConfig()" style="background:none;border:none;font-size:13px;color:var(--t3);cursor:pointer;margin-top:8px;text-align:center">Alterar URL do script</button>
+    <div class="setup">
+      <div style="text-align:center">
+        <div style="font-size:52px">💰</div>
+        <h1 style="font-size:22px;font-weight:800;margin-top:8px">Finanças do Casal</h1>
+        <p style="font-size:14px;color:var(--t2);margin-top:6px;margin-bottom:4px">Entre com sua conta Google</p>
+      </div>
+      <div id="gsi-btn" style="display:flex;justify-content:center;min-height:46px"></div>
+      <p id="login-msg" style="font-size:13px;color:var(--r);text-align:center;min-height:18px"></p>
+      <button onclick="mudarConfig()" style="background:none;border:none;font-size:13px;color:var(--t3);cursor:pointer;text-align:center;margin-top:4px">Alterar URL do script</button>
     </div>
   </div>
 </div>
 
-<!-- MAIN -->
+<!-- ============ TELA PRINCIPAL ============ -->
 <div id="scr-main" class="scr">
-  <div class="topbar">
+  <div class="top">
     <div style="display:flex;align-items:center;gap:9px">
-      <div id="topav" class="av av-p" style="width:32px;height:32px;font-size:12px;overflow:hidden"></div>
-      <h1 id="topname" style="font-size:16px;font-weight:700">Finanças</h1>
+      <div id="top-av" class="av av-p" style="width:32px;height:32px;font-size:12px">?</div>
+      <h1 id="top-nome">Finanças</h1>
     </div>
-    <div class="tbr">
-      <button class="ib" onclick="setTab('notif')">🔔<span class="nb" id="ncount" style="display:none">0</span></button>
-      <button class="ib" onclick="setTab('profile')">Perfil</button>
-      <button class="ib" onclick="signOut()">Sair</button>
+    <div class="top-r">
+      <button class="ib" onclick="irTab('notif')">🔔<span id="n-count" class="badge-dot" style="display:none">0</span></button>
+      <button class="ib" onclick="irTab('perfil')">Perfil</button>
+      <button class="ib" onclick="sair()">Sair</button>
     </div>
   </div>
-  <div id="tabcont" class="scroll"></div>
-  <button class="fab" id="fab" onclick="openAdd()" style="display:none">+</button>
+  <div id="tab-cont" class="scroll"></div>
+  <button class="fab" id="fab" onclick="abrirAdd()" style="display:none">+</button>
   <nav class="bnav">
-    <button class="nb2 on" id="nav-exp"  onclick="setTab('expenses')"><span class="ni">💳</span>Despesas</button>
-    <button class="nb2"    id="nav-bal"  onclick="setTab('balance')"><span class="ni">⚖️</span>Balanço</button>
-    <button class="nb2"    id="nav-hist" onclick="setTab('history')"><span class="ni">📅</span>Histórico</button>
-    <button class="nb2"    id="nav-rep"  onclick="setTab('report')"><span class="ni">📊</span>Relatório</button>
-    <button class="nb2"    id="nav-adm"  onclick="setTab('admin')" style="display:none"><span class="ni">🔑</span>Admin</button>
+    <button class="nv on" id="nav-despesas"  onclick="irTab('despesas')"><span class="ni">💳</span>Despesas</button>
+    <button class="nv"    id="nav-balanco"   onclick="irTab('balanco')"><span class="ni">⚖️</span>Balanço</button>
+    <button class="nv"    id="nav-historico" onclick="irTab('historico')"><span class="ni">📅</span>Histórico</button>
+    <button class="nv"    id="nav-relatorio" onclick="irTab('relatorio')"><span class="ni">📊</span>Relatório</button>
+    <button class="nv"    id="nav-admin"     onclick="irTab('admin')" style="display:none"><span class="ni">🔑</span>Admin</button>
   </nav>
 </div>
 
 <!-- Modal -->
-<div id="mbg" class="mbg" style="display:none" onclick="bgClose(event)"><div class="mod" id="minner"><div class="mh"></div></div></div>
+<div id="mbg" class="mbg" style="display:none" onclick="fecharSeExt(event)">
+  <div class="mod" id="mod-inner"><div class="mh"></div></div>
+</div>
 <!-- Loading -->
-<div id="lov" class="lov" style="display:none"><div class="lbox"><div class="lspin"></div><span id="lmsg">Carregando...</span></div></div>
+<div id="lov" class="lov" style="display:none">
+  <div class="lbox"><div class="lspin"></div><span id="lov-msg">Carregando...</span></div>
+</div>
 <!-- Toast -->
 <div id="toast" class="toast"></div>
 
-<!-- Google Identity Services -->
-<script src="https://accounts.google.com/gsi/client" async></script>
-
 <script>
-// ============================================================
-//  CONFIG — altere CLIENT_ID com o seu Google OAuth Client ID
-// ============================================================
-// Instruções para obter: console.cloud.google.com → APIs → Credenciais
-// Crie um "ID do cliente OAuth 2.0" do tipo "Aplicativo da Web"
-// Adicione a origem do seu app (ex: http://localhost ou URL do tiiny.host)
-const GOOGLE_CLIENT_ID = "484700340283-i6asp28o915s2qn4or4nof2tpochcuer.apps.googleusercontent.com";
-const CFG_KEY  = "fc_url_v2";
-const TOKEN_KEY = "fc_token_v2";
-const EMAIL_KEY = "fc_email_v2";
-const SEEN_KEY  = "fc_seen_";
+// ================================================================
+//  ⚠️  ALTERE COM SEU CLIENT ID DO GOOGLE CLOUD
+// ================================================================
+const CLIENT_ID = "484700340283-i6asp28o915s2qn4or4nof2tpochcuer.apps.googleusercontent.com";
 
-// ============================================================
-//  ESTADO
-// ============================================================
+// ================================================================
+//  CONSTANTES
+// ================================================================
+const K_URL   = "fc_url";
+const K_TOKEN = "fc_token";
+const K_EMAIL = "fc_email";
+const K_SEEN  = "fc_seen_";
+
 const CATS = [
-  {id:'mercado',   label:'Mercado',    emoji:'🛒',bg:'#EEEDFE',bar:'#534AB7'},
-  {id:'contas',    label:'Contas',     emoji:'💡',bg:'#E6F1FB',bar:'#378ADD'},
-  {id:'lazer',     label:'Lazer',      emoji:'🎉',bg:'#FAEEDA',bar:'#BA7517'},
-  {id:'saude',     label:'Saúde',      emoji:'💊',bg:'#E1F5EE',bar:'#1D9E75'},
-  {id:'transporte',label:'Transporte', emoji:'🚗',bg:'#F1EFE8',bar:'#5F5E5A'},
-  {id:'outros',    label:'Outros',     emoji:'📦',bg:'#FCEBEB',bar:'#993C1D'}
+  {id:"mercado",   label:"Mercado",    emoji:"🛒", bg:"#EEEDFE", bar:"#534AB7"},
+  {id:"contas",    label:"Contas",     emoji:"💡", bg:"#E6F1FB", bar:"#378ADD"},
+  {id:"lazer",     label:"Lazer",      emoji:"🎉", bg:"#FAEEDA", bar:"#BA7517"},
+  {id:"saude",     label:"Saúde",      emoji:"💊", bg:"#E1F5EE", bar:"#1D9E75"},
+  {id:"transporte",label:"Transporte", emoji:"🚗", bg:"#F1EFE8", bar:"#5F5E5A"},
+  {id:"outros",    label:"Outros",     emoji:"📦", bg:"#FCEBEB", bar:"#993C1D"}
 ];
-const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const MESESC = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
-let S = {
-  url:'', token:'', email:'', profile:{}, isAdmin:false,
-  tab:'expenses',
+// ================================================================
+//  ESTADO GLOBAL
+// ================================================================
+let G = {
+  url:"", token:"", email:"", profile:{}, isAdmin:false,
+  tab:"despesas",
   vm: new Date().getMonth()+1, vy: new Date().getFullYear(),
-  openExp:null, openHist:null, editingId:null,
   expenses:[], settlements:[], users:[],
-  form:{desc:'',val:'',cat:'mercado',payer:'',pct:50},
+  openExp:null, openHist:null, editId:null,
   seenIds: new Set(),
-  reportData: null,
-  reportGran: 'month',
-  reportView: 'chart',
-  reportType: 'bar',
-  reportMetric: 'total',
-  reportDim: 'cat',
-  reportStart: '', reportEnd: '',
-  adminTab: 'emails',
-  allowedEmails: [], admins: [],
-  chartInst: null
+  form:{desc:"",val:"",cat:"mercado",payer:"",pct:50},
+  // Relatório
+  rStart:"", rEnd:"", rGran:"month", rType:"bar",
+  rMetric:"total", rDim:"cat", rView:"chart",
+  rData:null, rChart:null,
+  // Admin
+  adminTab:"emails", aEmails:[], aAdmins:[]
 };
 
-// ============================================================
+// ================================================================
 //  INIT
-// ============================================================
-window.onload = () => {
-  S.url   = localStorage.getItem(CFG_KEY)   || '';
-  S.token = localStorage.getItem(TOKEN_KEY) || '';
-  S.email = localStorage.getItem(EMAIL_KEY) || '';
-  if (!S.url) { show('scr-setup'); return; }
-  if (S.token) { tryAutoLogin(); return; }
-  show('scr-login');
-  initGSI();
-};
+// ================================================================
+window.addEventListener("load", () => {
+  G.url   = localStorage.getItem(K_URL)   || "";
+  G.token = localStorage.getItem(K_TOKEN) || "";
+  G.email = localStorage.getItem(K_EMAIL) || "";
+  if (!G.url) { mostrar("scr-setup"); return; }
+  if (G.token) { autoLogin(); return; }
+  mostrar("scr-login");
+  setTimeout(initGSI, 300);
+});
 
-function show(id) {
-  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
-  document.getElementById(id).classList.add('on');
+function mostrar(id) {
+  document.querySelectorAll(".scr").forEach(s => s.classList.remove("on"));
+  document.getElementById(id).classList.add("on");
 }
 
-function saveConfig() {
-  const url = document.getElementById('setup-url').value.trim();
-  if (!url.startsWith('https://')) { toast('URL inválida'); return; }
-  S.url = url;
-  localStorage.setItem(CFG_KEY, url);
-  show('scr-login');
-  initGSI();
+// ================================================================
+//  CONFIGURAÇÃO
+// ================================================================
+function salvarConfig() {
+  const url = document.getElementById("inp-url").value.trim();
+  if (!url.startsWith("https://")) { toast("URL inválida"); return; }
+  G.url = url;
+  localStorage.setItem(K_URL, url);
+  mostrar("scr-login");
+  setTimeout(initGSI, 300);
 }
-function changeConfig() { show('scr-setup'); document.getElementById('setup-url').value=S.url; }
+function mudarConfig() {
+  mostrar("scr-setup");
+  document.getElementById("inp-url").value = G.url;
+}
 
-// ============================================================
+// ================================================================
 //  GOOGLE SIGN-IN
-// ============================================================
+// ================================================================
 function initGSI() {
-  if (!window.google) { setTimeout(initGSI, 500); return; }
+  if (!window.google || !google.accounts) { setTimeout(initGSI, 400); return; }
   google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback: onGoogleToken,
-    auto_select: false
+    client_id: CLIENT_ID,
+    callback : onGToken,
+    ux_mode  : "popup"
+  });
+  google.accounts.id.renderButton(
+    document.getElementById("gsi-btn"),
+    { theme:"outline", size:"large", width:280, locale:"pt-BR" }
+  );
+  google.accounts.id.prompt(() => {});
+}
+
+async function onGToken(resp) {
+  const idToken = resp.credential;
+  loginMsg("Verificando acesso...");
+  load("Verificando...");
+  try {
+    const res = await api({ action:"googleLogin", idToken });
+    if (!res.ok) { loginMsg(res.error || "Acesso negado"); hideLoad(); return; }
+    salvarSessao(res);
+    loginMsg("");
+    entrarApp();
+  } catch(e) {
+    loginMsg("Erro de conexão. Verifique a URL do script.");
+    console.error(e);
+  } finally { hideLoad(); }
+}
+
+async function autoLogin() {
+  load("Verificando sessão...");
+  try {
+    const res = await api({ action:"checkAuth", token: G.token });
+    if (!res.ok) { clearSessao(); mostrar("scr-login"); setTimeout(initGSI,300); hideLoad(); return; }
+    G.profile = res.profile || {};
+    G.isAdmin  = res.isAdmin || false;
+    entrarApp();
+  } catch(e) {
+    clearSessao(); mostrar("scr-login"); setTimeout(initGSI,300);
+  } finally { hideLoad(); }
+}
+
+function salvarSessao(res) {
+  G.token   = res.token;
+  G.email   = res.email;
+  G.profile = res.profile || {};
+  G.isAdmin  = res.isAdmin || false;
+  localStorage.setItem(K_TOKEN, G.token);
+  localStorage.setItem(K_EMAIL, G.email);
+}
+function clearSessao() {
+  localStorage.removeItem(K_TOKEN);
+  G.token = ""; G.email = ""; G.profile = {}; G.isAdmin = false;
+}
+
+function sair() {
+  clearSessao();
+  G.expenses = []; G.settlements = []; G.aEmails = []; G.aAdmins = [];
+  mostrar("scr-login");
+  setTimeout(initGSI, 200);
+}
+
+function entrarApp() {
+  mostrar("scr-main");
+  atualizarTop();
+  if (G.isAdmin) document.getElementById("nav-admin").style.display = "";
+  carregarSeenIds();
+  Promise.all([fetchDespesas(), fetchAcertos()]).then(() => {
+    irTab("despesas");
   });
 }
 
-function googleSignIn() {
-  if (!window.google) { toast('Aguarde...'); setTimeout(googleSignIn,800); return; }
-  google.accounts.id.prompt(notification => {
-    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-      // Fallback: abre popup manual
-      google.accounts.id.renderButton(
-        Object.assign(document.createElement('div'),{id:'gsibtn'}),
-        {theme:'outline',size:'large'}
-      );
-    }
-  });
-}
-
-async function onGoogleToken(response) {
-  // Decodifica o JWT do Google (sem verificar assinatura — feito no backend)
-  const parts   = response.credential.split('.');
-  const payload = JSON.parse(atob(parts[1]));
-  showLoad('Verificando acesso...');
-  try {
-    const res = await api({ action:'googleLogin', email:payload.email, name:payload.name, photo:payload.picture });
-    if (res.error) { toast(res.error); hideLoad(); return; }
-    S.token   = res.token;
-    S.email   = payload.email;
-    S.profile = res.profile || { email:payload.email, name:payload.name, photo:payload.picture };
-    S.isAdmin = res.isAdmin || false;
-    localStorage.setItem(TOKEN_KEY, S.token);
-    localStorage.setItem(EMAIL_KEY, S.email);
-    enterApp();
-  } catch(e) { toast('Erro ao conectar'); console.error(e); }
-  finally { hideLoad(); }
-}
-
-async function tryAutoLogin() {
-  showLoad('Verificando sessão...');
-  try {
-    const res = await api({ action:'checkAuth', token:S.token });
-    if (!res.ok) { localStorage.removeItem(TOKEN_KEY); show('scr-login'); initGSI(); hideLoad(); return; }
-    S.profile = res.profile || {};
-    S.isAdmin = res.isAdmin || false;
-    enterApp();
-  } catch(e) { show('scr-login'); initGSI(); }
-  finally { hideLoad(); }
-}
-
-function signOut() {
-  localStorage.removeItem(TOKEN_KEY);
-  S.token=''; S.email=''; S.profile={}; S.isAdmin=false;
-  S.expenses=[]; S.settlements=[];
-  show('scr-login');
-  initGSI();
-}
-
-async function enterApp() {
-  show('scr-main');
-  // Atualiza topbar
-  updateTopbar();
-  if (S.isAdmin) document.getElementById('nav-adm').style.display='';
-  loadSeenIds();
-  await fetchAll();
-  setTab('expenses');
-}
-
-function updateTopbar() {
-  const av = document.getElementById('topav');
-  const nm = document.getElementById('topname');
-  nm.textContent = S.profile.name ? S.profile.name.split(' ')[0] : S.email.split('@')[0];
-  if (S.profile.photo) {
-    av.innerHTML = `<img src="${S.profile.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover"/>`;
+function atualizarTop() {
+  const p  = G.profile;
+  const av = document.getElementById("top-av");
+  document.getElementById("top-nome").textContent = (p.name || G.email || "").split(" ")[0] || "Eu";
+  if (p.photo) {
+    av.innerHTML = `<img src="${p.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover"/>`;
   } else {
-    av.textContent = (S.profile.name||S.email).substring(0,2).toUpperCase();
+    av.className = "av av-p";
+    av.style.cssText = "width:32px;height:32px;font-size:12px";
+    av.textContent = (p.name || G.email || "?").substring(0,2).toUpperCase();
   }
 }
 
-// ============================================================
+function loginMsg(m) {
+  const el = document.getElementById("login-msg");
+  if (el) el.textContent = m;
+}
+
+// ================================================================
 //  API
-// ============================================================
+// ================================================================
 async function api(body) {
-  const r = await fetch(S.url, { method:'POST', body: JSON.stringify(body) });
+  const r = await fetch(G.url, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" }, // evita preflight CORS
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error("HTTP " + r.status);
   return r.json();
 }
 
-async function fetchAll() {
-  showLoad('Sincronizando...');
+// ================================================================
+//  FETCH DATA
+// ================================================================
+async function fetchDespesas() {
   try {
-    const [eRes, sRes] = await Promise.all([
-      api({ action:'getExpenses', token:S.token }),
-      api({ action:'getSettlements', token:S.token })
-    ]);
-    S.expenses    = eRes.expenses    || [];
-    S.settlements = sRes.settlements || [];
-    updateNotifCount();
-  } catch(e) { toast('Erro ao sincronizar'); }
-  finally { hideLoad(); }
+    const r = await api({ action:"getExpenses", token:G.token });
+    if (r.ok) G.expenses = r.expenses || [];
+    atualizarNotif();
+  } catch(e) { console.error("fetchDespesas", e); }
 }
 
-// ============================================================
+async function fetchAcertos() {
+  try {
+    const r = await api({ action:"getSettlements", token:G.token });
+    if (r.ok) G.settlements = r.settlements || [];
+  } catch(e) { console.error("fetchAcertos", e); }
+}
+
+// ================================================================
 //  NAVEGAÇÃO
-// ============================================================
-function setTab(tab) {
-  S.tab = tab; S.openExp = null;
-  ['expenses','balance','history','report','admin','notif','profile'].forEach(t => {
-    const n = document.getElementById('nav-'+t);
-    if (n) n.classList.toggle('on', t===tab);
+// ================================================================
+function irTab(tab) {
+  G.tab = tab; G.openExp = null;
+  ["despesas","balanco","historico","relatorio","admin","notif","perfil"].forEach(t => {
+    const n = document.getElementById("nav-" + t);
+    if (n) n.classList.toggle("on", t === tab);
   });
-  document.getElementById('fab').style.display = tab==='expenses' ? 'flex' : 'none';
+  document.getElementById("fab").style.display = tab === "despesas" ? "flex" : "none";
   renderTab();
 }
 
-// ============================================================
-//  RENDER TABS
-// ============================================================
 function renderTab() {
-  const el = document.getElementById('tabcont');
+  const el = document.getElementById("tab-cont");
   el.scrollTop = 0;
-  if      (S.tab==='expenses') el.innerHTML = renderExpenses();
-  else if (S.tab==='balance')  el.innerHTML = renderBalance();
-  else if (S.tab==='history')  el.innerHTML = renderHistory();
-  else if (S.tab==='report')   renderReport(el);
-  else if (S.tab==='admin')    renderAdmin(el);
-  else if (S.tab==='notif')    { el.innerHTML = renderNotif(); markAllRead(); }
-  else if (S.tab==='profile')  el.innerHTML = renderProfile();
+  if (G.tab === "despesas")  el.innerHTML = renderDespesas();
+  else if (G.tab === "balanco")   el.innerHTML = renderBalanco();
+  else if (G.tab === "historico") el.innerHTML = renderHistorico();
+  else if (G.tab === "relatorio") { el.innerHTML = renderRelFiltros(); carregarRelatorio(); }
+  else if (G.tab === "notif")     { el.innerHTML = renderNotif(); marcarLidas(); }
+  else if (G.tab === "perfil")    el.innerHTML = renderPerfil();
+  else if (G.tab === "admin")     renderAdmin(el);
 }
 
-// ---- EXPENSES ----
-function renderExpenses() {
-  const exps = expForMonth(S.vy, S.vm);
+// ================================================================
+//  DESPESAS
+// ================================================================
+function renderDespesas() {
+  const exps = expDoMes(G.vy, G.vm);
   const {total, saldo} = calcSaldo(exps);
-  const sc = saldo>0.01?'pos':saldo<-0.01?'neg':'';
-  const list = exps.length===0
-    ? `<div class="empty">Nenhuma despesa neste mês.<br>Toque no + para adicionar.</div>`
-    : exps.map(e => expItem(e)).join('');
-  return `${monthNav()}
-    <div class="sgrid">
-      <div class="mc"><div class="ml">Total gasto</div><div class="mv">${fmt(total)}</div></div>
-      <div class="mc"><div class="ml">Saldo</div><div class="mv ${sc}">${saldo===0?'Quites':fmt(Math.abs(saldo))}</div></div>
+  const sc = saldo > .01 ? "pos" : saldo < -.01 ? "neg" : "";
+  return `
+    ${navMes()}
+    <div class="grid2">
+      <div class="card"><div class="ml">Total gasto</div><div class="mv">${fmt(total)}</div></div>
+      <div class="card"><div class="ml">Saldo</div><div class="mv ${sc}">${Math.abs(saldo) < .01 ? "Quites" : fmt(Math.abs(saldo))}</div></div>
     </div>
-    <p class="sec">Despesas</p>
-    <div class="elist">${list}</div>
-    <div style="height:76px"></div>`;
+    <p class="sec">Despesas do mês</p>
+    <div class="elist">${exps.length ? exps.map(itemExp).join("") : '<div class="empty">Nenhuma despesa este mês.<br>Toque em + para adicionar.</div>'}</div>
+    <div style="height:10px"></div>`;
 }
 
-function expItem(e) {
-  const c    = cat(e.cat);
-  const mine = S.email;
-  const isNew = e.addedBy !== mine && !S.seenIds.has(e.id);
-  const open  = S.openExp===e.id;
-  const pme   = e.val * e.pctMe/100;
-  // Determina nome do autor
-  const authorName = getUserDisplayName(e.addedBy);
-  return `<div class="ei${isNew?' new':''}${e.settled?' settled':''}" onclick="toggleExp('${e.id}')">
+function itemExp(e) {
+  const c    = catById(e.cat);
+  const mine = G.email;
+  const isNew  = e.addedBy !== mine && !G.seenIds.has(e.id);
+  const open   = G.openExp === e.id;
+  const pme    = e.val * e.pctMe / 100;
+  const autor  = nomeUsuario(e.addedBy);
+  return `<div class="ei${isNew?" is-new":""}${e.settled?" is-settled":""}" onclick="toggleExp('${esc(e.id)}')">
     <div class="erow">
       <div class="ci" style="background:${c.bg}">${c.emoji}</div>
       <div class="ei2">
-        <div class="en">${esc(e.desc)}${isNew?` <span class="badge bnew">Novo</span>`:''}${e.settled?` <span class="badge bset">✅ Quitado</span>`:''}</div>
-        <div class="em">${c.label} · ${fmtD(e.date)} · <span class="badge" style="background:var(--pl);color:var(--pd);font-size:10px">${authorName}</span></div>
+        <div class="en">${esc(e.desc)}${isNew?` <span class="bge bge-new">Novo</span>`:""}${e.settled?` <span class="bge bge-set">✅</span>`:""}</div>
+        <div class="em">${c.label} · ${fmtD(e.date)} · <span class="bge bge-p" style="font-size:10px">${autor}</span></div>
       </div>
       <div class="ea"><div class="eat">${fmt(e.val)}</div><div class="eas">Minha: ${fmt(pme)}</div></div>
     </div>
-    <div class="sd${open?' on':''}">
+    <div class="edet${open?" on":""}">
       <div class="sr">
-        <div class="av av-p" style="width:24px;height:24px;font-size:9px;overflow:hidden">${userAvSmall(mine)}</div>
-        <div class="sn">Eu${e.payer===mine?' (paguei)':''}</div>
+        <div class="av av-p" style="width:24px;height:24px;font-size:9px">EU</div>
+        <div class="sn">Eu${e.payer===mine?" (paguei)":""}</div>
         <div class="pt"><div class="pme" style="width:${e.pctMe}%"></div></div>
         <div class="sp">${e.pctMe}%</div><div class="sv">${fmt(e.val*e.pctMe/100)}</div>
       </div>
       <div class="sr">
-        <div class="av av-g" style="width:24px;height:24px;font-size:9px;overflow:hidden">${userAvSmall('other')}</div>
-        <div class="sn">Ela${e.payer!==mine&&e.payer?' (pagou)':''}</div>
+        <div class="av av-g" style="width:24px;height:24px;font-size:9px">EL</div>
+        <div class="sn">Ela${e.payer!==mine&&e.payer?" (pagou)":""}</div>
         <div class="pt"><div class="psp" style="width:${100-e.pctMe}%"></div></div>
         <div class="sp">${100-e.pctMe}%</div><div class="sv">${fmt(e.val*(100-e.pctMe)/100)}</div>
       </div>
       <div class="eacts">
-        <button class="eb" onclick="editExp(event,'${e.id}')">Editar</button>
-        <button class="eb del" onclick="delExp(event,'${e.id}')">Excluir</button>
+        <button class="ebtn" onclick="editarExp(event,'${esc(e.id)}')">Editar</button>
+        ${!e.settled ? `<button class="ebtn" style="color:#0F6E56;border-color:#9FE1CB" onclick="quitarUma(event,'${esc(e.id)}','${esc(e.desc)}')">Quitar</button>` : ""}
+        <button class="ebtn del" onclick="apagarExp(event,'${esc(e.id)}')">Excluir</button>
       </div>
     </div>
   </div>`;
 }
 
-// ---- BALANCE ----
-function renderBalance() {
-  const exps = expForMonth(S.vy, S.vm);
-  const {total,dMe,dSp,saldo} = calcSaldo(exps);
-  const pct = total>0 ? Math.round(dMe/total*100) : 50;
-  const sl  = saldo>0.01?`Me devem ${fmt(saldo)}`:saldo<-0.01?`Devo ${fmt(Math.abs(saldo))}`:'Quites!';
-  const sc  = saldo>0.01?'#0F6E56':saldo<-0.01?'var(--r)':'#0F6E56';
-  const mk  = mkey(S.vy,S.vm);
-  const set = S.settlements.find(s=>s.month===mk);
-  const settledCount = exps.filter(e=>e.settled).length;
+// ================================================================
+//  BALANÇO
+// ================================================================
+function renderBalanco() {
+  const exps = expDoMes(G.vy, G.vm);
+  const {total, dMe, dSp, saldo} = calcSaldo(exps);
+  const pct  = total > 0 ? Math.round(dMe/total*100) : 50;
+  const sl   = saldo>.01?`Me devem ${fmt(saldo)}`:saldo<-.01?`Devo ${fmt(Math.abs(saldo))}`:"Quites!";
+  const sc   = saldo>.01?"#0F6E56":saldo<-.01?"var(--r)":"#0F6E56";
+  const mk   = mkey(G.vy, G.vm);
+  const set  = G.settlements.find(s => s.month === mk);
+  const qCt  = exps.filter(e => e.settled).length;
   const byCat = {};
-  exps.forEach(e=>{if(!byCat[e.cat])byCat[e.cat]={t:0,n:0,s:0};byCat[e.cat].t+=e.val;byCat[e.cat].n++;if(e.settled)byCat[e.cat].s+=e.val;});
+  exps.forEach(e => { if(!byCat[e.cat])byCat[e.cat]={t:0,n:0,s:0}; byCat[e.cat].t+=e.val; byCat[e.cat].n++; if(e.settled)byCat[e.cat].s+=e.val; });
   const cats = Object.entries(byCat).sort((a,b)=>b[1].t-a[1].t);
-  return `${monthNav()}
-    <div class="bc2">
+  return `
+    ${navMes()}
+    <div class="card" style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="display:flex;align-items:center;gap:7px"><div class="av av-p" style="width:26px;height:26px;font-size:9px;overflow:hidden">${userAvSmall(S.email)}</div><span style="font-size:14px;font-weight:700">Eu</span></div>
+        <div style="display:flex;align-items:center;gap:7px"><div class="av av-p" style="width:26px;height:26px;font-size:9px">EU</div><span style="font-size:14px;font-weight:700">Eu</span></div>
         <span style="font-size:13px;color:var(--t2)">${fmt(total)} total</span>
-        <div style="display:flex;align-items:center;gap:7px"><span style="font-size:14px;font-weight:700">Ela</span><div class="av av-g" style="width:26px;height:26px;font-size:9px">${userAvSmall('other')}</div></div>
+        <div style="display:flex;align-items:center;gap:7px"><span style="font-size:14px;font-weight:700">Ela</span><div class="av av-g" style="width:26px;height:26px;font-size:9px">EL</div></div>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--t2)"><span>${fmt(dMe)}</span><span>${fmt(dSp)}</span></div>
-      <div class="bb"><div class="bf" style="width:${pct}%"></div></div>
+      <div class="bbar"><div class="bfill" style="width:${pct}%"></div></div>
       <div class="bstat"><strong style="color:${sc}">${sl}</strong></div>
-      <div style="font-size:12px;color:var(--t2);text-align:center;margin-top:6px">${settledCount} de ${exps.length} despesas quitadas individualmente</div>
+      <div style="font-size:12px;color:var(--t2);text-align:center;margin-top:6px">${qCt} de ${exps.length} despesas quitadas</div>
       ${set
-        ? `<div class="setb">✅ Mês quitado em ${fmtD(set.date)} · ${set.expenseCount||0} despesas · ${fmt(set.totalValue||0)}</div>`
-        : `<button class="bq"${Math.abs(saldo)<0.01?' disabled':''} onclick="settleMonth()">Quitar saldo do mês</button>`}
+        ? `<div class="setb">✅ Quitado em ${fmtD(set.settledDate)} · ${set.expenseCount||0} despesas · ${fmt(set.totalValue||0)}</div>`
+        : `<button class="bs green" style="width:100%;margin-top:10px;padding:12px" onclick="abrirModalQuitacao()">Quitar despesas do mês</button>`}
     </div>
-    ${cats.length?'<p class="sec">Por categoria</p>':''}
-    ${cats.map(([cid,d])=>{
-      const c=cat(cid);const pct2=total>0?Math.round(d.t/total*100):0;const spct=d.t>0?Math.round(d.s/d.t*100):0;
-      return `<div class="mc" style="margin-bottom:8px">
+    ${cats.length?"<p class='sec'>Por categoria</p>":""}
+    ${cats.map(([cid,d])=>{const c=catById(cid);const pct2=total>0?Math.round(d.t/total*100):0;const spct=d.t>0?Math.round(d.s/d.t*100):0;
+      return `<div class="card" style="margin-bottom:8px">
         <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px">
           <div class="ci" style="background:${c.bg};width:30px;height:30px;font-size:13px">${c.emoji}</div>
           <div style="flex:1"><div style="font-size:14px;font-weight:700">${c.label}</div>
-          <div style="font-size:12px;color:var(--t2)">${d.n} despesa${d.n>1?'s':''} · ${spct}% quitado</div></div>
+            <div style="font-size:12px;color:var(--t2)">${d.n} despesa${d.n>1?"s":""} · ${spct}% quitado</div></div>
           <div style="font-size:14px;font-weight:700">${fmt(d.t)}</div>
-          <div style="font-size:13px;color:var(--t2);min-width:32px;text-align:right">${pct2}%</div>
+          <div style="font-size:12px;color:var(--t2);min-width:30px;text-align:right">${pct2}%</div>
         </div>
-        <div class="bb" style="height:5px"><div class="bf" style="width:${pct2}%;background:${c.bar}"></div></div>
+        <div class="bbar" style="height:5px"><div class="bfill" style="width:${pct2}%;background:${c.bar}"></div></div>
       </div>`;
-    }).join('')}`;
+    }).join("")}`;
 }
 
-// ---- HISTORY ----
-function renderHistory() {
+// ================================================================
+//  HISTÓRICO
+// ================================================================
+function renderHistorico() {
   const byMonth = {};
-  S.expenses.forEach(e=>{const k=e.date.substring(0,7);if(!byMonth[k])byMonth[k]=[];byMonth[k].push(e);});
+  G.expenses.forEach(e => { const k=e.date.substring(0,7); if(!byMonth[k])byMonth[k]=[]; byMonth[k].push(e); });
   const months = Object.keys(byMonth).sort().reverse();
   if (!months.length) return '<div class="empty">Nenhum histórico ainda.</div>';
-  return '<p class="sec">Por mês</p>' + months.map(k=>{
-    const [y,m] = k.split('-').map(Number);
+  return "<p class='sec'>Por mês</p>" + months.map(k => {
+    const [y,m] = k.split("-").map(Number);
     const exps  = byMonth[k];
-    const {total,saldo} = calcSaldo(exps);
-    const set   = S.settlements.find(s=>s.month===k);
-    const open  = S.openHist===k;
-    const qCount = exps.filter(e=>e.settled).length;
-    const sc = saldo>0.01?'#0F6E56':saldo<-0.01?'var(--r)':'var(--t3)';
-    return `<div class="mc" style="margin-bottom:8px;cursor:pointer" onclick="toggleHist('${k}')">
+    const {total, saldo} = calcSaldo(exps);
+    const set   = G.settlements.find(s => s.month === k);
+    const open  = G.openHist === k;
+    const sc    = saldo>.01?"#0F6E56":saldo<-.01?"var(--r)":"var(--t3)";
+    const qCt   = exps.filter(e=>e.settled).length;
+    return `<div class="card" style="margin-bottom:8px;cursor:pointer" onclick="toggleHist('${k}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div><div style="font-size:15px;font-weight:700">${MESES[m-1]} ${y}</div>
-          <div style="font-size:12px;color:var(--t2);margin-top:2px">${exps.length} despesas · ${qCount} quitadas</div></div>
+          <div style="font-size:12px;color:var(--t2);margin-top:2px">${exps.length} despesas · ${qCt} quitadas</div></div>
         <div style="text-align:right"><div style="font-size:15px;font-weight:700">${fmt(total)}</div>
-          <div style="font-size:12px;font-weight:600;color:${sc}">${saldo>0.01?'Me devem '+fmt(saldo):saldo<-0.01?'Devo '+fmt(Math.abs(saldo)):'Quites'}</div></div>
+          <div style="font-size:12px;font-weight:600;color:${sc}">${saldo>.01?"Crédito "+fmt(saldo):saldo<-.01?"Débito "+fmt(Math.abs(saldo)):"Quites"}</div></div>
       </div>
-      ${set?`<div class="setb" style="margin-top:8px">✅ Quitado em ${fmtD(set.date)}</div>`:''}
-      <div style="display:${open?'block':'none'};margin-top:10px;border-top:.5px solid var(--bord);padding-top:10px">
-        ${exps.map(e=>{const c=cat(e.cat);return`<div style="display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:.5px solid var(--bord)">
+      ${set?`<div class="setb" style="margin-top:8px">✅ Quitado em ${fmtD(set.settledDate)}</div>`:""}
+      <div style="display:${open?"block":"none"};margin-top:10px;border-top:.5px solid var(--bord);padding-top:10px">
+        ${exps.map(e=>{const c=catById(e.cat);return`<div style="display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:.5px solid var(--bord)">
           <div class="ci" style="background:${c.bg};width:28px;height:28px;font-size:12px">${c.emoji}</div>
-          <div style="flex:1;font-size:13px">${esc(e.desc)}${e.settled?' ✅':''}</div>
+          <div style="flex:1;font-size:13px">${esc(e.desc)}${e.settled?" ✅":""}</div>
           <div style="font-size:13px;font-weight:700">${fmt(e.val)}</div>
-        </div>`}).join('')}
-        <button onclick="goToMonth(event,${y},${m})" style="margin-top:10px;width:100%;padding:10px;background:var(--pl);color:var(--p);border:none;border-radius:var(--rad-s);font-size:14px;font-weight:700;cursor:pointer">Ver detalhes →</button>
+        </div>`}).join("")}
+        <button onclick="irMes(event,${y},${m})" style="margin-top:10px;width:100%;padding:10px;background:var(--pl);color:var(--p);border:none;border-radius:var(--rads);font-size:14px;font-weight:700;cursor:pointer">Ver detalhes →</button>
       </div>
     </div>`;
-  }).join('');
+  }).join("");
 }
 
-// ---- NOTIFICATIONS ----
+// ================================================================
+//  NOTIFICAÇÕES
+// ================================================================
 function renderNotif() {
-  const newExps = S.expenses.filter(e=>e.addedBy!==S.email).sort((a,b)=>b.id>a.id?1:-1);
-  if (!newExps.length) return '<div class="empty">Nenhuma despesa adicionada por outros.</div>';
-  return `<p class="sec">Adicionadas por outros membros</p><div class="mc" style="padding:0;overflow:hidden">
-    ${newExps.map(e=>{const c=cat(e.cat);const isNew=!S.seenIds.has(e.id);
-      return`<div style="padding:12px 14px;display:flex;align-items:flex-start;gap:9px;border-bottom:.5px solid var(--bord)">
-        ${isNew?'<div style="width:8px;height:8px;border-radius:50%;background:#D85A30;flex-shrink:0;margin-top:5px"></div>':'<div style="width:8px;flex-shrink:0"></div>'}
-        <div style="flex:1"><div style="font-size:14px;font-weight:700">${esc(e.desc)} — ${fmt(e.val)}</div>
-          <div style="font-size:12px;color:var(--t2);margin-top:2px">${c.emoji} ${c.label} · ${fmtD(e.date)} · Minha parte: <strong>${fmt(e.val*e.pctMe/100)}</strong></div>
-          ${e.settled?'<span class="badge bset" style="margin-top:3px;display:inline-block">✅ Quitado</span>':''}
-        </div>
-      </div>`;
-    }).join('')}
-  </div>`;
+  const outros = G.expenses.filter(e => e.addedBy !== G.email).sort((a,b)=>b.id>a.id?1:-1);
+  if (!outros.length) return '<div class="empty">Nenhuma despesa adicionada por outros ainda.</div>';
+  return `<p class="sec">Lançadas por outros</p>
+    <div class="card" style="padding:0;overflow:hidden">
+      ${outros.map(e=>{const c=catById(e.cat);const isNew=!G.seenIds.has(e.id);
+        return`<div style="padding:12px 14px;display:flex;align-items:flex-start;gap:9px;border-bottom:.5px solid var(--bord)">
+          ${isNew?'<div style="width:8px;height:8px;border-radius:50%;background:#D85A30;flex-shrink:0;margin-top:5px"></div>':'<div style="width:8px;flex-shrink:0"></div>'}
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700">${esc(e.desc)} — ${fmt(e.val)}</div>
+            <div style="font-size:12px;color:var(--t2);margin-top:2px">${c.emoji} ${c.label} · ${fmtD(e.date)} · Minha parte: <strong>${fmt(e.val*e.pctMe/100)}</strong></div>
+            ${e.settled?'<span class="bge bge-set" style="margin-top:3px">✅ Quitado</span>':""}
+          </div>
+        </div>`;
+      }).join("")}
+    </div>`;
 }
 
-// ---- PROFILE ----
-function renderProfile() {
-  const p = S.profile;
-  const initials = (p.name||p.email||'??').substring(0,2).toUpperCase();
-  return `<div style="max-width:400px;margin:0 auto">
-    <div class="profav-wrap">
+// ================================================================
+//  PERFIL
+// ================================================================
+function renderPerfil() {
+  const p = G.profile;
+  const ini = (p.name||G.email||"??").substring(0,2).toUpperCase();
+  return `<div style="max-width:400px;margin:0 auto;padding-bottom:20px">
+    <div class="profwrap">
       ${p.photo
-        ? `<img src="${p.photo}" class="profav-img" id="prof-img"/>`
-        : `<div class="av av-p profav-img" style="width:80px;height:80px;font-size:24px;display:flex;align-items:center;justify-content:center">${initials}</div>`}
-      <div class="profav-edit" onclick="triggerPhotoOptions()">✏️</div>
+        ? `<img src="${esc(p.photo)}" class="profimg"/>`
+        : `<div class="av av-p profimg" style="display:flex;align-items:center;justify-content:center;font-size:24px">${ini}</div>`}
+      <button class="profedit" onclick="document.getElementById('foto-file').click()">✏️</button>
     </div>
+    <input type="file" id="foto-file" accept="image/*" style="display:none" onchange="uploadFoto(event)"/>
+    <div class="fg"><label class="fl">Nome</label><input class="fi" id="p-nome" value="${esc(p.name||"")}" placeholder="Seu nome"/></div>
+    <div class="fg"><label class="fl">E-mail</label><input class="fi" value="${esc(p.email||G.email||"")}" disabled style="opacity:.6"/></div>
     <div class="fg">
-      <label class="fl">Nome</label>
-      <input class="fi" id="pname" value="${esc(p.name||'')}" placeholder="Seu nome"/>
-    </div>
-    <div class="fg">
-      <label class="fl">E-mail</label>
-      <input class="fi" value="${esc(p.email||'')}" disabled style="opacity:.6"/>
-    </div>
-    <div class="fg">
-      <label class="fl">Foto de perfil</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="cb on" style="flex:1;flex-direction:row;padding:10px" onclick="useGooglePhoto()">📷 Usar foto do Google</button>
-        <button class="cb" style="flex:1;flex-direction:row;padding:10px" onclick="document.getElementById('photo-file').click()">📁 Fazer upload</button>
+      <label class="fl">Foto</label>
+      <div style="display:flex;gap:8px">
+        <button class="cb on" style="flex:1;flex-direction:row;padding:10px" onclick="usarFotoGoogle()">📷 Foto do Google</button>
+        <button class="cb" style="flex:1;flex-direction:row;padding:10px" onclick="document.getElementById('foto-file').click()">📁 Upload</button>
       </div>
-      <input type="file" id="photo-file" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)"/>
     </div>
-    <button class="bs" style="width:100%;margin-top:4px" onclick="saveProfile()">Salvar perfil</button>
-    ${S.isAdmin?`<button class="bc" style="width:100%;margin-top:10px" onclick="setTab('admin')">🔑 Painel Admin</button>`:''}
+    <button class="bs" style="width:100%" onclick="salvarPerfil()">Salvar perfil</button>
+    ${G.isAdmin?`<button class="bc" style="width:100%;margin-top:10px" onclick="irTab('admin')">🔑 Painel Admin</button>`:""}
   </div>`;
 }
 
-// ---- ADMIN ----
+// ================================================================
+//  ADMIN
+// ================================================================
 async function renderAdmin(el) {
-  if (S.allowedEmails.length===0 && S.admins.length===0) {
-    showLoad('Carregando admin...');
+  if (!G.aEmails.length && !G.aAdmins.length) {
+    load("Carregando admin...");
     try {
-      const [ae,ad,us] = await Promise.all([
-        api({action:'getAllowedEmails',token:S.token}),
-        api({action:'getAdmins',token:S.token}),
-        api({action:'getAllUsers',token:S.token})
+      const [ae, ad, us] = await Promise.all([
+        api({action:"getAllowedEmails", token:G.token}),
+        api({action:"getAdmins",        token:G.token}),
+        api({action:"getAllUsers",       token:G.token})
       ]);
-      S.allowedEmails = ae.emails||[];
-      S.admins        = ad.admins||[];
-      S.users         = us.users||[];
-    } catch(e) { toast('Erro ao carregar admin'); }
+      G.aEmails = ae.emails || [];
+      G.aAdmins = ad.admins || [];
+      G.users   = us.users  || [];
+    } catch(e) { toast("Erro ao carregar admin"); }
     finally { hideLoad(); }
   }
-  el.innerHTML = renderAdminContent();
+  el.innerHTML = htmlAdmin();
 }
 
-function renderAdminContent() {
-  const tab = S.adminTab;
-  return `
-    <p class="sec">Painel de Administração</p>
-    <div class="atab">
-      <button class="at${tab==='emails'?' on':''}" onclick="switchAdminTab('emails')">E-mails</button>
-      <button class="at${tab==='admins'?' on':''}" onclick="switchAdminTab('admins')">Admins</button>
-      <button class="at${tab==='users'?' on':''}" onclick="switchAdminTab('users')">Usuários</button>
+function htmlAdmin() {
+  const t = G.adminTab;
+  return `<p class="sec">Painel de Administração</p>
+    <div class="atabs">
+      <button class="at${t==="emails"?" on":""}" onclick="abaAdmin('emails')">E-mails</button>
+      <button class="at${t==="admins"?" on":""}" onclick="abaAdmin('admins')">Admins</button>
+      <button class="at${t==="users"?" on":""}"  onclick="abaAdmin('users')">Usuários</button>
     </div>
-    ${tab==='emails' ? renderAdminEmails() : tab==='admins' ? renderAdminAdmins() : renderAdminUsers()}`;
+    ${t==="emails"?htmlAdminEmails():t==="admins"?htmlAdminAdmins():htmlAdminUsers()}`;
 }
 
-function renderAdminEmails() {
-  return `
-    <div style="display:flex;gap:8px;margin-bottom:12px">
+function htmlAdminEmails() {
+  return `<div style="display:flex;gap:8px;margin-bottom:12px">
       <input class="fi" id="new-email" placeholder="email@gmail.com" style="flex:1"/>
       <button class="bs" style="flex:0;padding:11px 14px;white-space:nowrap" onclick="addEmail()">+ Adicionar</button>
     </div>
-    ${S.allowedEmails.length===0?'<div class="empty">Nenhum e-mail cadastrado.</div>':
-    S.allowedEmails.map(e=>`<div class="acard">
+    ${G.aEmails.length?G.aEmails.map(e=>`<div class="acard">
       <div class="av av-p" style="width:38px;height:38px;font-size:13px">${e.email.substring(0,2).toUpperCase()}</div>
       <div class="acard-info"><h3>${esc(e.name||e.email)}</h3><p>${esc(e.email)}</p></div>
-      <button class="adel" onclick="removeEmail('${esc(e.email)}')">Remover</button>
-    </div>`).join('')}`;
+      <button class="adel" onclick="remEmail('${esc(e.email)}')">Remover</button>
+    </div>`).join(""):'<div class="empty">Nenhum e-mail extra cadastrado.</div>'}`;
 }
 
-function renderAdminAdmins() {
-  return `
-    <div style="display:flex;gap:8px;margin-bottom:12px">
+function htmlAdminAdmins() {
+  return `<div style="display:flex;gap:8px;margin-bottom:12px">
       <input class="fi" id="new-admin" placeholder="email@gmail.com" style="flex:1"/>
-      <button class="bs" style="flex:0;padding:11px 14px;white-space:nowrap" onclick="addAdminEmail()">+ Admin</button>
+      <button class="bs" style="flex:0;padding:11px 14px;white-space:nowrap" onclick="addAdm()">+ Admin</button>
     </div>
-    ${S.admins.map(a=>`<div class="acard">
-      <div class="av${a.isSuper?' av-g':' av-p'}" style="width:38px;height:38px;font-size:13px">${a.email.substring(0,2).toUpperCase()}</div>
-      <div class="acard-info"><h3>${esc(a.name||a.email)}${a.isSuper?' 👑':''}</h3><p>${esc(a.email)}</p></div>
-      ${!a.isSuper?`<button class="adel" onclick="removeAdminEmail('${esc(a.email)}')">Remover</button>`:''}
-    </div>`).join('')}`;
+    ${G.aAdmins.map(a=>`<div class="acard">
+      <div class="av${a.isSuper?" av-g":" av-p"}" style="width:38px;height:38px;font-size:13px">${a.email.substring(0,2).toUpperCase()}</div>
+      <div class="acard-info"><h3>${esc(a.name||a.email)}${a.isSuper?" 👑":""}</h3><p>${esc(a.email)}</p></div>
+      ${!a.isSuper?`<button class="adel" onclick="remAdm('${esc(a.email)}')">Remover</button>`:""}
+    </div>`).join("")}`;
 }
 
-function renderAdminUsers() {
-  return S.users.length===0?'<div class="empty">Nenhum usuário registrado ainda.</div>':
-    S.users.map(u=>`<div class="acard">
-      ${u.photo?`<img src="${u.photo}" class="av" style="width:40px;height:40px;object-fit:cover"/>`
-        :`<div class="av av-p" style="width:40px;height:40px;font-size:13px">${(u.name||u.email).substring(0,2).toUpperCase()}</div>`}
-      <div class="acard-info"><h3>${esc(u.name||'Sem nome')}</h3><p>${esc(u.email)}</p></div>
-    </div>`).join('');
+function htmlAdminUsers() {
+  return G.users.length?G.users.map(u=>`<div class="acard">
+    ${u.photo?`<img src="${esc(u.photo)}" class="av" style="width:40px;height:40px;object-fit:cover"/>`
+      :`<div class="av av-p" style="width:40px;height:40px;font-size:13px">${(u.name||u.email).substring(0,2).toUpperCase()}</div>`}
+    <div class="acard-info"><h3>${esc(u.name||"Sem nome")}</h3><p>${esc(u.email)}</p></div>
+  </div>`).join("") : '<div class="empty">Nenhum usuário registrado.</div>';
 }
 
-// ---- REPORT ----
-function renderReport(el) {
+// ================================================================
+//  RELATÓRIO
+// ================================================================
+function renderRelFiltros() {
   const now = new Date();
-  if (!S.reportStart) {
-    S.reportStart = now.getFullYear()+'-01-01';
-    S.reportEnd   = now.getFullYear()+'-12-31';
-  }
-  el.innerHTML = buildReportShell();
-  loadReportData();
-}
-
-function buildReportShell() {
+  if (!G.rStart) G.rStart = now.getFullYear() + "-01-01";
+  if (!G.rEnd)   G.rEnd   = now.getFullYear() + "-12-31";
   return `
-  <div class="rfilters">
-    <div class="rfl">
-      <div class="rf"><label>De</label><input type="date" class="rsel" id="r-start" value="${S.reportStart}" onchange="S.reportStart=this.value"/></div>
-      <div class="rf"><label>Até</label><input type="date" class="rsel" id="r-end" value="${S.reportEnd}" onchange="S.reportEnd=this.value"/></div>
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div><label class="fl">De</label><input type="date" class="fi" style="padding:8px 10px" id="r-de" value="${G.rStart}" onchange="G.rStart=this.value"/></div>
+      <div><label class="fl">Até</label><input type="date" class="fi" style="padding:8px 10px" id="r-ate" value="${G.rEnd}" onchange="G.rEnd=this.value"/></div>
     </div>
-    <div class="rfl">
-      <div class="rf"><label>Período</label>
-        <select class="rsel" onchange="S.reportGran=this.value" id="r-gran">
-          <option value="day">Dia</option>
-          <option value="month" selected>Mês</option>
-          <option value="bimonth">Bimestre</option>
-          <option value="quarter">Trimestre</option>
-          <option value="semester">Semestre</option>
-          <option value="year">Ano</option>
-        </select>
-      </div>
-      <div class="rf"><label>Gráfico</label>
-        <select class="rsel" onchange="S.reportType=this.value" id="r-type">
-          <option value="bar">Barras</option>
-          <option value="line">Linha</option>
-          <option value="pie">Pizza</option>
-          <option value="doughnut">Rosca</option>
-        </select>
-      </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div><label class="fl">Período</label>
+        <select class="rsel" onchange="G.rGran=this.value">
+          <option value="day"${G.rGran==="day"?" selected":""}>Dia</option>
+          <option value="month"${G.rGran==="month"?" selected":""}>Mês</option>
+          <option value="bimonth"${G.rGran==="bimonth"?" selected":""}>Bimestre</option>
+          <option value="quarter"${G.rGran==="quarter"?" selected":""}>Trimestre</option>
+          <option value="semester"${G.rGran==="semester"?" selected":""}>Semestre</option>
+          <option value="year"${G.rGran==="year"?" selected":""}>Ano</option>
+        </select></div>
+      <div><label class="fl">Gráfico</label>
+        <select class="rsel" onchange="G.rType=this.value">
+          <option value="bar"${G.rType==="bar"?" selected":""}>Barras</option>
+          <option value="line"${G.rType==="line"?" selected":""}>Linha</option>
+          <option value="pie"${G.rType==="pie"?" selected":""}>Pizza</option>
+          <option value="doughnut"${G.rType==="doughnut"?" selected":""}>Rosca</option>
+        </select></div>
     </div>
     <div style="margin-bottom:8px">
-      <label style="font-size:12px;font-weight:700;color:var(--t2);display:block;margin-bottom:5px">Dimensão</label>
-      <div style="display:flex;flex-wrap:wrap;gap:4px">
-        <span class="dim-pill${S.reportDim==='cat'?' on':''}" onclick="S.reportDim='cat';renderReportChart()">Categoria</span>
-        <span class="dim-pill${S.reportDim==='user'?' on':''}" onclick="S.reportDim='user';renderReportChart()">Usuário</span>
-        <span class="dim-pill${S.reportDim==='payer'?' on':''}" onclick="S.reportDim='payer';renderReportChart()">Quem Pagou</span>
+      <label class="fl">Dimensão</label>
+      <div id="pills-dim">
+        ${["cat:Categoria","user:Usuário","payer:Quem Pagou"].map(p=>{const[v,l]=p.split(":");return`<span class="pill${G.rDim===v?" on":""}" onclick="G.rDim='${v}';renderRelChart()">${l}</span>`;}).join("")}
       </div>
     </div>
-    <div style="margin-bottom:4px">
-      <label style="font-size:12px;font-weight:700;color:var(--t2);display:block;margin-bottom:5px">Métrica</label>
-      <div style="display:flex;gap:4px;flex-wrap:wrap">
-        <span class="dim-pill${S.reportMetric==='total'?' on':''}" onclick="S.reportMetric='total';renderReportChart()">Total</span>
-        <span class="dim-pill${S.reportMetric==='settled'?' on':''}" onclick="S.reportMetric='settled';renderReportChart()">Quitado</span>
-        <span class="dim-pill${S.reportMetric==='pending'?' on':''}" onclick="S.reportMetric='pending';renderReportChart()">Pendente</span>
+    <div style="margin-bottom:10px">
+      <label class="fl">Métrica</label>
+      <div id="pills-met">
+        ${["total:Total","settled:Quitado","pending:Pendente"].map(p=>{const[v,l]=p.split(":");return`<span class="pill${G.rMetric===v?" on":""}" onclick="G.rMetric='${v}';renderRelChart()">${l}</span>`;}).join("")}
       </div>
     </div>
-    <button class="bs" style="width:100%;margin-top:10px;padding:10px" onclick="loadReportData()">Atualizar relatório</button>
+    <button class="bs" style="width:100%;padding:10px" onclick="carregarRelatorio()">Atualizar relatório</button>
   </div>
   <div class="rtabs">
-    <button class="rt${S.reportView==='chart'?' on':''}" onclick="S.reportView='chart';renderReportChart()">Gráfico</button>
-    <button class="rt${S.reportView==='table'?' on':''}" onclick="S.reportView='table';renderReportChart()">Tabela</button>
-    <button class="rt${S.reportView==='summary'?' on':''}" onclick="S.reportView='summary';renderReportChart()">Resumo</button>
+    <button class="rt${G.rView==="chart"?" on":""}" onclick="G.rView='chart';renderRelChart()">Gráfico</button>
+    <button class="rt${G.rView==="table"?" on":""}" onclick="G.rView='table';renderRelChart()">Tabela</button>
+    <button class="rt${G.rView==="resumo"?" on":""}" onclick="G.rView='resumo';renderRelChart()">Resumo</button>
   </div>
-  <div id="report-output"></div>`;
+  <div id="rel-out"></div>`;
 }
 
-async function loadReportData() {
-  showLoad('Carregando relatório...');
+async function carregarRelatorio() {
+  load("Carregando relatório...");
   try {
-    const res = await api({
-      action:'getReportData', token:S.token,
-      startDate:S.reportStart, endDate:S.reportEnd,
-      granularity:S.reportGran
-    });
-    S.reportData = res;
-    renderReportChart();
-  } catch(e) { toast('Erro ao carregar relatório'); }
+    const r = await api({ action:"getReportData", token:G.token, startDate:G.rStart, endDate:G.rEnd, granularity:G.rGran });
+    if (r.ok) { G.rData = r; renderRelChart(); }
+    else toast("Erro: " + (r.error||"desconhecido"));
+  } catch(e) { toast("Erro ao carregar relatório"); console.error(e); }
   finally { hideLoad(); }
 }
 
-function renderReportChart() {
-  const out = document.getElementById('report-output');
-  if (!out || !S.reportData) return;
+function renderRelChart() {
+  const out = document.getElementById("rel-out");
+  if (!out) return;
 
-  // Atualiza pills ativas
-  document.querySelectorAll('.dim-pill').forEach(p=>{
-    p.classList.remove('on');
-    if ((p.onclick+'').includes("'"+S.reportDim+"'") ||
-        (p.onclick+'').includes("'"+S.reportMetric+"'")) p.classList.add('on');
-  });
-  document.querySelectorAll('.rt').forEach((b,i)=>{
-    const views=['chart','table','summary'];
-    b.classList.toggle('on', views[i]===S.reportView);
-  });
-
-  if (S.reportView==='table')   { out.innerHTML = buildTable(); return; }
-  if (S.reportView==='summary') { out.innerHTML = buildSummary(); return; }
-
-  // Gráfico
-  const {series} = S.reportData;
-  if (!series || !series.length) { out.innerHTML='<div class="empty">Sem dados para o período.</div>'; return; }
-
-  const isPie = S.reportType==='pie'||S.reportType==='doughnut';
-
-  if (isPie) {
-    // Pizza por dimensão (usa dados do summary)
-    const summary = S.reportData.summary || {};
-    let labels=[], data=[], colors=[];
-    if (S.reportDim==='cat') {
-      const bc = summary.byCat || {};
-      Object.entries(bc).forEach(([cid,d])=>{
-        const c=cat(cid); labels.push(c.label); data.push(d[S.reportMetric]||d.total||0); colors.push(c.bar);
-      });
-    } else {
-      // Para user/payer, agrega da série
-      const agg={};
-      series.forEach(s=>{
-        const src = S.reportDim==='user'?s.byUser:s.byPayer;
-        Object.entries(src||{}).forEach(([k,v])=>{
-          if(!agg[k])agg[k]=0;
-          agg[k]+=(typeof v==='object'?v.total:v)||0;
-        });
-      });
-      const pal=['#534AB7','#1D9E75','#BA7517','#378ADD','#993C1D','#888780'];
-      Object.entries(agg).forEach(([k,v],i)=>{ labels.push(k.split('@')[0]); data.push(v); colors.push(pal[i%pal.length]); });
-    }
-    out.innerHTML=`<div class="chart-wrap"><canvas id="rchart" style="max-height:280px"></canvas></div>`;
-    buildChart('rchart',S.reportType,labels,null,[{data,backgroundColor:colors}]);
+  if (!G.rData) {
+    out.innerHTML = '<div class="empty">Clique em "Atualizar relatório" para carregar os dados.</div>';
     return;
   }
 
-  // Bar/Line — série temporal
-  const labels = series.map(s=>s.label);
-  let datasets = [];
+  if (G.rView === "table")  { out.innerHTML = htmlRelTabela();  return; }
+  if (G.rView === "resumo") { out.innerHTML = htmlRelResumo();  return; }
 
-  if (S.reportDim==='cat') {
-    const allCats = new Set();
-    series.forEach(s=>Object.keys(s.byCat||{}).forEach(c=>allCats.add(c)));
-    datasets = Array.from(allCats).map(cid=>{
-      const c=cat(cid);
-      return {
-        label:c.label,
-        data: series.map(s=>{const d=s.byCat&&s.byCat[cid]; return d?(S.reportMetric==='settled'?d.settled:S.reportMetric==='pending'?(d.total-d.settled):d.total):0;}),
-        backgroundColor: c.bar+'88',
-        borderColor: c.bar,
-        borderWidth:2, fill:false, tension:.3
-      };
-    });
-  } else if (S.reportDim==='user') {
-    const allUsers = new Set();
-    series.forEach(s=>Object.keys(s.byUser||{}).forEach(u=>allUsers.add(u)));
-    const pal=['#534AB7','#1D9E75','#BA7517','#378ADD','#993C1D'];
-    datasets = Array.from(allUsers).map((u,i)=>({
-      label: u.split('@')[0],
-      data: series.map(s=>(s.byUser&&s.byUser[u])?s.byUser[u].total:0),
-      backgroundColor:pal[i%pal.length]+'88', borderColor:pal[i%pal.length], borderWidth:2, fill:false, tension:.3
-    }));
-  } else {
-    const allP = new Set();
-    series.forEach(s=>Object.keys(s.byPayer||{}).forEach(p=>allP.add(p)));
-    datasets = Array.from(allP).map((p,i)=>({
-      label: p.split('@')[0],
-      data: series.map(s=>(s.byPayer&&s.byPayer[p])||0),
-      backgroundColor:['#534AB7','#1D9E75'][i%2]+'88', borderColor:['#534AB7','#1D9E75'][i%2], borderWidth:2, fill:false, tension:.3
-    }));
+  // Gráfico
+  if (G.rChart) { try{G.rChart.destroy();}catch(e){} G.rChart=null; }
+  const series = G.rData.series || [];
+  if (!series.length) {
+    out.innerHTML = '<div class="empty">Sem dados para o período selecionado.<br>Verifique as datas e clique em Atualizar.</div>';
+    return;
   }
 
-  // Se métrica for total/settled/pending e dim for temporal
-  if (S.reportDim==='cat'&&datasets.length===0 || (S.reportDim!=='cat'&&datasets.length===0)) {
-    datasets = [{
-      label: {total:'Total',settled:'Quitado',pending:'Pendente'}[S.reportMetric],
-      data: series.map(s=>s[S.reportMetric]||0),
-      backgroundColor:'#534AB788', borderColor:'#534AB7', borderWidth:2, fill:false, tension:.3
-    }];
-  }
+  const isPie  = G.rType === "pie" || G.rType === "doughnut";
+  out.innerHTML = `<div class="card" style="margin-bottom:10px"><canvas id="rchart" style="max-height:280px"></canvas></div>`;
 
-  out.innerHTML=`<div class="chart-wrap"><canvas id="rchart" style="max-height:280px"></canvas></div>`;
-  buildChart('rchart', S.reportType, labels, null, datasets);
-}
+  // Aguarda o DOM renderizar antes de criar o canvas
+  requestAnimationFrame(() => {
+    const canvas = document.getElementById("rchart");
+    if (!canvas) return;
+    const isDark = window.matchMedia("(prefers-color-scheme:dark)").matches;
+    const tc = isDark ? "#ababab" : "#666";
 
-function buildChart(id, type, labels, title, datasets) {
-  if (S.chartInst) { try{S.chartInst.destroy();}catch(e){} }
-  const ctx = document.getElementById(id);
-  if (!ctx) return;
-  const isDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
-  const textColor = isDark?'#ababab':'#666';
-  S.chartInst = new Chart(ctx, {
-    type,
-    data: { labels, datasets },
-    options: {
-      responsive:true, maintainAspectRatio:true,
-      plugins:{
-        legend:{display:true,position:'bottom',labels:{color:textColor,font:{size:11},padding:10,boxWidth:12}},
-        title:{display:!!title,text:title||'',color:textColor}
-      },
-      scales: (type==='pie'||type==='doughnut') ? {} : {
-        x:{ticks:{color:textColor,font:{size:11}},grid:{color:isDark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)'}},
-        y:{ticks:{color:textColor,font:{size:11},callback:v=>'R$'+v.toFixed(0)},grid:{color:isDark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)'}}
-      }
+    if (isPie) {
+      const agg = {};
+      series.forEach(s => {
+        const src = G.rDim==="cat" ? s.byCat : G.rDim==="user" ? s.byUser : s.byPayer;
+        Object.entries(src||{}).forEach(([k,v]) => {
+          if (!agg[k]) agg[k] = 0;
+          agg[k] += (typeof v==="object" ? (v[G.rMetric]||v.total||0) : v) || 0;
+        });
+      });
+      const labels=[],data=[],colors=[];
+      const pal=["#534AB7","#1D9E75","#BA7517","#378ADD","#993C1D","#888780"];
+      Object.entries(agg).forEach(([k,v],i) => {
+        const c = G.rDim==="cat" ? catById(k) : null;
+        labels.push(c ? c.label : k.split("@")[0]);
+        data.push(parseFloat(Number(v).toFixed(2)));
+        colors.push(c ? c.bar : pal[i%pal.length]);
+      });
+      G.rChart = new Chart(canvas, {
+        type: G.rType,
+        data: { labels, datasets:[{data, backgroundColor:colors}] },
+        options:{ responsive:true, plugins:{ legend:{display:true,position:"bottom",labels:{color:tc,font:{size:11},padding:10,boxWidth:12}} } }
+      });
+      return;
     }
+
+    // Barras / Linha
+    const labels = series.map(s => s.label);
+    let datasets = [];
+
+    if (G.rDim === "cat") {
+      const allCats = new Set();
+      series.forEach(s => Object.keys(s.byCat||{}).forEach(c => allCats.add(c)));
+      datasets = Array.from(allCats).map(cid => {
+        const c = catById(cid);
+        return {
+          label: c.label,
+          data: series.map(s => { const d=s.byCat&&s.byCat[cid]; return d?(d[G.rMetric]||0):0; }),
+          backgroundColor: c.bar+"88", borderColor: c.bar, borderWidth:2, fill:false, tension:.3
+        };
+      });
+    } else {
+      const allK = new Set();
+      series.forEach(s => Object.keys((G.rDim==="user"?s.byUser:s.byPayer)||{}).forEach(k => allK.add(k)));
+      const pal = ["#534AB7","#1D9E75","#BA7517","#378ADD","#993C1D"];
+      datasets = Array.from(allK).map((k,i) => ({
+        label: k.split("@")[0],
+        data: series.map(s => { const src=G.rDim==="user"?s.byUser:s.byPayer; return src&&src[k]?(typeof src[k]==="object"?src[k].total:src[k]):0; }),
+        backgroundColor: pal[i%pal.length]+"88", borderColor: pal[i%pal.length], borderWidth:2, fill:false, tension:.3
+      }));
+    }
+
+    if (!datasets.length) {
+      datasets = [{ label:{total:"Total",settled:"Quitado",pending:"Pendente"}[G.rMetric], data:series.map(s=>s[G.rMetric]||0), backgroundColor:"#534AB788", borderColor:"#534AB7", borderWidth:2, fill:false, tension:.3 }];
+    }
+
+    G.rChart = new Chart(canvas, {
+      type: G.rType,
+      data: { labels, datasets },
+      options:{
+        responsive:true,
+        plugins:{ legend:{display:true,position:"bottom",labels:{color:tc,font:{size:11},padding:10,boxWidth:12}} },
+        scales:{
+          x:{ ticks:{color:tc,font:{size:11}}, grid:{color:isDark?"rgba(255,255,255,.05)":"rgba(0,0,0,.05)"} },
+          y:{ ticks:{color:tc,font:{size:11},callback:v=>"R$"+Number(v).toFixed(0)}, grid:{color:isDark?"rgba(255,255,255,.05)":"rgba(0,0,0,.05)"} }
+        }
+      }
+    });
   });
 }
 
-function buildTable() {
-  const {series} = S.reportData;
-  if (!series||!series.length) return '<div class="empty">Sem dados.</div>';
-  return `<div class="chart-wrap" style="overflow-x:auto">
+function htmlRelTabela() {
+  const s = G.rData.series;
+  if (!s||!s.length) return '<div class="empty">Sem dados.</div>';
+  const tt=s.reduce((a,r)=>a+r.total,0), ts=s.reduce((a,r)=>a+r.settled,0);
+  return `<div class="card" style="overflow-x:auto">
     <table class="rtable">
       <tr><th>Período</th><th style="text-align:right">Total</th><th style="text-align:right">Quitado</th><th style="text-align:right">Pendente</th><th style="text-align:right">Qtd</th></tr>
-      ${series.map(s=>`<tr>
-        <td>${s.label}</td>
-        <td style="text-align:right;font-weight:700">${fmt(s.total)}</td>
-        <td style="text-align:right;color:#0F6E56">${fmt(s.settled)}</td>
-        <td style="text-align:right;color:var(--r)">${fmt(s.pending)}</td>
-        <td style="text-align:right;color:var(--t2)">${s.count}</td>
-      </tr>`).join('')}
-      <tr style="background:var(--bg)">
-        <td><strong>Total</strong></td>
-        <td style="text-align:right;font-weight:700">${fmt(series.reduce((s,r)=>s+r.total,0))}</td>
-        <td style="text-align:right;color:#0F6E56;font-weight:700">${fmt(series.reduce((s,r)=>s+r.settled,0))}</td>
-        <td style="text-align:right;color:var(--r);font-weight:700">${fmt(series.reduce((s,r)=>s+r.pending,0))}</td>
-        <td style="text-align:right;font-weight:700">${series.reduce((s,r)=>s+r.count,0)}</td>
-      </tr>
-    </table>
-  </div>`;
+      ${s.map(r=>`<tr><td>${r.label}</td><td style="text-align:right;font-weight:700">${fmt(r.total)}</td><td style="text-align:right;color:#0F6E56">${fmt(r.settled)}</td><td style="text-align:right;color:var(--r)">${fmt(r.pending)}</td><td style="text-align:right;color:var(--t2)">${r.count}</td></tr>`).join("")}
+      <tr style="background:var(--bg)"><td><strong>Total</strong></td><td style="text-align:right;font-weight:700">${fmt(tt)}</td><td style="text-align:right;color:#0F6E56;font-weight:700">${fmt(ts)}</td><td style="text-align:right;color:var(--r);font-weight:700">${fmt(tt-ts)}</td><td style="text-align:right;font-weight:700">${s.reduce((a,r)=>a+r.count,0)}</td></tr>
+    </table></div>`;
 }
 
-function buildSummary() {
-  const {summary} = S.reportData;
-  if (!summary) return '<div class="empty">Sem dados.</div>';
-  return `
-    <div class="sgrid" style="margin-bottom:10px">
-      <div class="mc"><div class="ml">Total gasto</div><div class="mv">${fmt(summary.total||0)}</div></div>
-      <div class="mc"><div class="ml">Quitado</div><div class="mv pos">${fmt(summary.settled||0)}</div></div>
-      <div class="mc"><div class="ml">Pendente</div><div class="mv neg">${fmt(summary.pending||0)}</div></div>
-      <div class="mc"><div class="ml">Despesas</div><div class="mv">${summary.count||0}</div></div>
-    </div>
-    <p class="sec">Por categoria</p>
-    ${Object.entries(summary.byCat||{}).sort((a,b)=>b[1].total-a[1].total).map(([cid,d])=>{
-      const c=cat(cid); const pct=summary.total>0?Math.round(d.total/summary.total*100):0;
-      return `<div class="mc" style="margin-bottom:7px">
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:6px">
-          <div class="ci" style="background:${c.bg};width:30px;height:30px;font-size:13px">${c.emoji}</div>
-          <div style="flex:1"><div style="font-size:14px;font-weight:700">${c.label}</div>
-            <div style="font-size:12px;color:var(--t2)">${d.count} despesas</div></div>
-          <div style="text-align:right"><div style="font-size:14px;font-weight:700">${fmt(d.total)}</div>
-            <div style="font-size:11px;color:#0F6E56">${fmt(d.settled)} quitado</div></div>
-        </div>
-        <div class="bb" style="height:5px"><div class="bf" style="width:${pct}%;background:${c.bar}"></div></div>
-      </div>`;
-    }).join('')}`;
+function htmlRelResumo() {
+  const sm = G.rData.summary;
+  if (!sm) return '<div class="empty">Sem dados.</div>';
+  return `<div class="grid2" style="margin-bottom:10px">
+    <div class="card"><div class="ml">Total</div><div class="mv">${fmt(sm.total||0)}</div></div>
+    <div class="card"><div class="ml">Quitado</div><div class="mv pos">${fmt(sm.settled||0)}</div></div>
+    <div class="card"><div class="ml">Pendente</div><div class="mv neg">${fmt(sm.pending||0)}</div></div>
+    <div class="card"><div class="ml">Despesas</div><div class="mv">${sm.count||0}</div></div>
+  </div>
+  <p class="sec">Por categoria</p>
+  ${Object.entries(sm.byCat||{}).sort((a,b)=>b[1].total-a[1].total).map(([cid,d])=>{
+    const c=catById(cid);const pct=sm.total>0?Math.round(d.total/sm.total*100):0;
+    return`<div class="card" style="margin-bottom:7px">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:6px">
+        <div class="ci" style="background:${c.bg};width:30px;height:30px;font-size:13px">${c.emoji}</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:700">${c.label}</div>
+          <div style="font-size:12px;color:var(--t2)">${d.count} despesas</div></div>
+        <div style="text-align:right"><div style="font-size:14px;font-weight:700">${fmt(d.total)}</div>
+          <div style="font-size:11px;color:#0F6E56">${fmt(d.settled)} quitado</div></div>
+      </div>
+      <div class="bbar" style="height:5px"><div class="bfill" style="width:${pct}%;background:${c.bar}"></div></div>
+    </div>`;
+  }).join("")}`;
 }
 
-// ============================================================
-//  AÇÕES
-// ============================================================
-function toggleExp(id) { S.openExp=S.openExp===id?null:id; S.seenIds.add(id); saveSeenIds(); renderTab(); }
-function toggleHist(k) { S.openHist=S.openHist===k?null:k; renderTab(); }
-function goToMonth(ev,y,m) { ev.stopPropagation(); S.vy=y; S.vm=m; S.openHist=null; setTab('expenses'); }
-function prevMonth() { if(S.vm===1){S.vm=12;S.vy--;}else S.vm--; S.openExp=null; renderTab(); }
-function nextMonth() { if(S.vm===12){S.vm=1;S.vy++;}else S.vm++; S.openExp=null; renderTab(); }
-
-async function delExp(ev,id) {
+// ================================================================
+//  MODAL — ADICIONAR / EDITAR DESPESA
+// ================================================================
+function abrirAdd() {
+  G.editId = null;
+  G.form = { desc:"", val:"", cat:"mercado", payer:G.email, pct:50 };
+  abrirModal();
+}
+function editarExp(ev, id) {
   ev.stopPropagation();
-  if (!confirm('Excluir esta despesa?')) return;
-  showLoad('Excluindo...');
-  try {
-    await api({action:'deleteExpense',token:S.token,id});
-    S.expenses = S.expenses.filter(e=>e.id!==id);
-    S.openExp=null; toast('Excluída'); renderTab();
-  } catch(e){toast('Erro ao excluir');}
-  finally{hideLoad();}
+  const e = G.expenses.find(x => x.id === id);
+  if (!e) return;
+  G.editId = id;
+  G.form = { desc:e.desc, val:String(e.val), cat:e.cat, payer:e.payer, pct:e.pctMe };
+  abrirModal();
 }
 
-function editExp(ev,id) {
-  ev.stopPropagation();
-  const e = S.expenses.find(x=>x.id===id);
-  if(!e) return;
-  S.editingId=id;
-  S.form={desc:e.desc,val:String(e.val),cat:e.cat,payer:e.payer,pct:e.pctMe};
-  openModal();
-}
-
-function openAdd() {
-  S.editingId=null;
-  S.form={desc:'',val:'',cat:'mercado',payer:S.email,pct:50};
-  openModal();
-}
-
-function openModal() {
-  const f=S.form; const isEdit=S.editingId!==null;
-  document.getElementById('minner').innerHTML=`<div class="mh"></div>
-    <p class="mt">${isEdit?'Editar despesa':'Nova despesa'}</p>
+function abrirModal() {
+  const f = G.form;
+  const isEdit = G.editId !== null;
+  document.getElementById("mod-inner").innerHTML = `
+    <div class="mh"></div>
+    <p class="mt">${isEdit?"Editar despesa":"Nova despesa"}</p>
     <div class="fg"><label class="fl">Descrição</label><input class="fi" id="f-desc" value="${esc(f.desc)}" placeholder="Ex: Supermercado"/></div>
     <div class="fg"><label class="fl">Valor (R$)</label><input class="fi" id="f-val" type="number" value="${f.val}" placeholder="0,00" inputmode="decimal"/></div>
     <div class="fg"><label class="fl">Categoria</label>
-      <div class="cgrid" id="f-cats">${CATS.map(c=>`<button class="cb${c.id===f.cat?' on':''}" onclick="pickCat('${c.id}')"><span class="ce">${c.emoji}</span>${c.label}</button>`).join('')}</div>
+      <div class="cgrid" id="f-cats">${CATS.map(c=>`<button class="cb${c.id===f.cat?" on":""}" onclick="pickCat('${c.id}')"><span class="ce">${c.emoji}</span>${c.label}</button>`).join("")}</div>
     </div>
     <div class="fg"><label class="fl">Quem pagou?</label>
       <div class="pr">
-        <button class="pb${f.payer===S.email?' me':''}" id="pb-me" onclick="pickPayer('me')"><div class="av av-p" style="width:22px;height:22px;font-size:9px;overflow:hidden">${userAvSmall(S.email)}</div>Eu</button>
-        <button class="pb${f.payer!==S.email?' sp':''}" id="pb-sp" onclick="pickPayer('other')"><div class="av av-g" style="width:22px;height:22px;font-size:9px">${userAvSmall('other')}</div>Ela</button>
+        <button class="pb${f.payer===G.email?" me":""}" id="pb-eu" onclick="pickPayer('eu')">
+          <div class="av av-p" style="width:22px;height:22px;font-size:9px">EU</div>Eu
+        </button>
+        <button class="pb${f.payer!==G.email?" sp":""}" id="pb-ela" onclick="pickPayer('ela')">
+          <div class="av av-g" style="width:22px;height:22px;font-size:9px">EL</div>Ela
+        </button>
       </div>
     </div>
     <div class="slg">
       <div class="sll"><span>Minha parte</span><span>Parte dela</span></div>
       <input type="range" id="f-pct" min="0" max="100" value="${f.pct}" step="1" oninput="updPct(this.value)"/>
-      <div class="slv"><span id="lbl-me">${f.pct}%</span><span id="lbl-sp">${100-f.pct}%</span></div>
+      <div class="slv"><span id="lbl-me">${f.pct}%</span><span id="lbl-ela">${100-f.pct}%</span></div>
     </div>
     <div class="macts">
-      <button class="bc" onclick="closeModal()">Cancelar</button>
-      <button class="bs" onclick="saveExp()">Salvar</button>
+      <button class="bc" onclick="fecharModal()">Cancelar</button>
+      <button class="bs" onclick="salvarExp()">Salvar</button>
     </div>`;
-  document.getElementById('mbg').style.display='flex';
+  document.getElementById("mbg").style.display = "flex";
 }
 
 function pickCat(id) {
-  S.form.cat=id;
-  document.querySelectorAll('#f-cats .cb').forEach(b=>b.classList.remove('on'));
-  event.currentTarget.classList.add('on');
+  G.form.cat = id;
+  document.querySelectorAll("#f-cats .cb").forEach(b => b.classList.remove("on"));
+  event.currentTarget.classList.add("on");
 }
 function pickPayer(p) {
-  S.form.payer = p==='me'?S.email:'other';
-  document.getElementById('pb-me').className='pb'+(p==='me'?' me':'');
-  document.getElementById('pb-sp').className='pb'+(p==='other'?' sp':'');
+  G.form.payer = p === "eu" ? G.email : "outra";
+  document.getElementById("pb-eu").className  = "pb" + (p==="eu"?" me":"");
+  document.getElementById("pb-ela").className = "pb" + (p==="ela"?" sp":"");
 }
 function updPct(v) {
-  S.form.pct=parseInt(v);
-  document.getElementById('lbl-me').textContent=v+'%';
-  document.getElementById('lbl-sp').textContent=(100-parseInt(v))+'%';
+  G.form.pct = parseInt(v);
+  document.getElementById("lbl-me").textContent  = v + "%";
+  document.getElementById("lbl-ela").textContent = (100-parseInt(v)) + "%";
 }
-function closeModal() { document.getElementById('mbg').style.display='none'; S.editingId=null; }
-function bgClose(e)   { if(e.target===document.getElementById('mbg'))closeModal(); }
+function fecharModal() { document.getElementById("mbg").style.display = "none"; G.editId = null; }
+function fecharSeExt(e) { if (e.target === document.getElementById("mbg")) fecharModal(); }
 
-async function saveExp() {
-  const desc = document.getElementById('f-desc').value.trim();
-  const val  = parseFloat(document.getElementById('f-val').value);
-  if (!desc||isNaN(val)||val<=0) { toast('Preencha descrição e valor'); return; }
-  const payload = {desc,val,cat:S.form.cat,payer:S.form.payer,pctMe:S.form.pct,date:todayStr()};
-  showLoad(S.editingId?'Salvando...':'Adicionando...');
+async function salvarExp() {
+  const desc = document.getElementById("f-desc").value.trim();
+  const val  = parseFloat(document.getElementById("f-val").value);
+  if (!desc || isNaN(val) || val <= 0) { toast("Preencha descrição e valor"); return; }
+
+  const payload = { desc, val, cat:G.form.cat, payer:G.form.payer, pctMe:G.form.pct, date:hoje() };
+  load(G.editId ? "Atualizando..." : "Salvando...");
   try {
-    if (S.editingId) {
-      await api({action:'editExpense',token:S.token,id:S.editingId,...payload});
-      const idx=S.expenses.findIndex(e=>e.id===S.editingId);
-      if(idx>-1) S.expenses[idx]={...S.expenses[idx],...payload};
-      toast('Atualizada');
+    if (G.editId) {
+      const r = await api({ action:"editExpense", token:G.token, id:G.editId, ...payload });
+      if (!r.ok) { toast(r.error||"Erro ao editar"); return; }
+      const idx = G.expenses.findIndex(e => e.id === G.editId);
+      if (idx > -1) G.expenses[idx] = { ...G.expenses[idx], ...payload };
+      toast("Despesa atualizada ✓");
     } else {
-      const res=await api({action:'addExpense',token:S.token,...payload});
-      S.expenses.unshift({...payload,id:res.id,addedBy:S.email,settled:false});
-      toast('Adicionada');
+      const r = await api({ action:"addExpense", token:G.token, ...payload });
+      if (!r.ok) { toast(r.error||"Erro ao salvar"); return; }
+      G.expenses.unshift({ ...payload, id:r.id, addedBy:G.email, settled:false });
+      toast("Despesa adicionada ✓");
     }
-    closeModal(); renderTab();
-  } catch(e){toast('Erro ao salvar');}
-  finally{hideLoad();}
-}
-
-async function settleMonth() {
-  if (!confirm('Quitar todas as despesas pendentes deste mês?')) return;
-  const mk = mkey(S.vy,S.vm);
-  showLoad('Quitando...');
-  try {
-    const res = await api({action:'settleMonth',token:S.token,month:mk});
-    if (res.error && !res.alreadyDone) { toast(res.error); return; }
-    // Atualiza localmente
-    S.expenses.filter(e=>e.date.startsWith(mk)&&!e.settled).forEach(e=>{e.settled=true;e.settledAt=todayStr();e.settledMonth=mk;});
-    S.settlements.push({month:mk,date:todayStr(),settledBy:S.email,totalValue:res.totalValue,expenseCount:res.settledCount});
-    toast(`${res.settledCount} despesas quitadas · ${fmt(res.totalValue||0)}`);
+    fecharModal();
     renderTab();
-  } catch(e){toast('Erro ao quitar');}
-  finally{hideLoad();}
+  } catch(e) { toast("Erro de conexão. Verifique o script."); console.error(e); }
+  finally { hideLoad(); }
 }
 
-// ADMIN ACTIONS
-async function addEmail() {
-  const email=document.getElementById('new-email').value.trim();
-  if(!email){toast('Digite o e-mail');return;}
-  showLoad('Adicionando...');
+async function quitarUma(ev, id, desc) {
+  ev.stopPropagation();
+  if (!confirm(`Quitar "${desc}"?`)) return;
+  const e  = G.expenses.find(x => x.id === id);
+  const mk = e ? e.date.substring(0, 7) : mkey(G.vy, G.vm);
+  load("Quitando...");
   try {
-    const res=await api({action:'addAllowedEmail',token:S.token,email,addedBy:S.email});
-    if(res.error){toast(res.error);return;}
-    S.allowedEmails.push({email,name:''});
-    document.getElementById('new-email').value='';
-    toast('E-mail adicionado');
-    document.getElementById('tabcont').innerHTML=renderAdminContent();
-  } catch(e){toast('Erro');}
-  finally{hideLoad();}
+    const r = await api({ action:"settleExpenses", token:G.token, ids:[id], month:mk });
+    if (!r.ok) { toast(r.error || "Erro"); return; }
+    const exp = G.expenses.find(x => x.id === id);
+    if (exp) { exp.settled = true; exp.settledAt = hoje(); exp.settledMonth = mk; }
+    toast("✅ Despesa quitada");
+    G.openExp = null;
+    renderTab();
+  } catch(e) { toast("Erro de conexão"); console.error(e); }
+  finally { hideLoad(); }
 }
-async function removeEmail(email) {
-  if(!confirm('Remover '+email+'?')) return;
-  showLoad('Removendo...');
+  ev.stopPropagation();
+  if (!confirm("Excluir esta despesa?")) return;
+  load("Excluindo...");
   try {
-    await api({action:'removeAllowedEmail',token:S.token,email});
-    S.allowedEmails=S.allowedEmails.filter(e=>e.email!==email);
-    toast('Removido');
-    document.getElementById('tabcont').innerHTML=renderAdminContent();
-  } catch(e){toast('Erro');}
-  finally{hideLoad();}
+    const r = await api({ action:"deleteExpense", token:G.token, id });
+    if (!r.ok) { toast(r.error||"Erro"); return; }
+    G.expenses = G.expenses.filter(e => e.id !== id);
+    G.openExp = null;
+    toast("Excluída");
+    renderTab();
+  } catch(e) { toast("Erro de conexão"); }
+  finally { hideLoad(); }
 }
-async function addAdminEmail() {
-  const email=document.getElementById('new-admin').value.trim();
-  if(!email){toast('Digite o e-mail');return;}
-  showLoad('Adicionando...');
-  try {
-    const res=await api({action:'addAdmin',token:S.token,email});
-    if(res.error){toast(res.error);return;}
-    S.admins.push({email,name:''});
-    document.getElementById('new-admin').value='';
-    toast('Admin adicionado');
-    document.getElementById('tabcont').innerHTML=renderAdminContent();
-  } catch(e){toast('Erro');}
-  finally{hideLoad();}
-}
-async function removeAdminEmail(email) {
-  if(!confirm('Remover admin '+email+'?')) return;
-  showLoad('Removendo...');
-  try {
-    await api({action:'removeAdmin',token:S.token,email});
-    S.admins=S.admins.filter(a=>a.email!==email);
-    toast('Removido');
-    document.getElementById('tabcont').innerHTML=renderAdminContent();
-  } catch(e){toast('Erro');}
-  finally{hideLoad();}
-}
-function switchAdminTab(tab) { S.adminTab=tab; document.getElementById('tabcont').innerHTML=renderAdminContent(); }
 
-// PROFILE ACTIONS
-async function saveProfile() {
-  const name=document.getElementById('pname').value.trim();
-  showLoad('Salvando...');
+// Abre modal de quitação com lista de despesas selecionáveis
+function abrirModalQuitacao() {
+  const mk   = mkey(G.vy, G.vm);
+  const exps = expDoMes(G.vy, G.vm).filter(e => !e.settled);
+  if (!exps.length) { toast("Nenhuma despesa pendente neste mês"); return; }
+
+  const totalPend = exps.reduce((s,e) => s + e.val, 0);
+
+  document.getElementById("mod-inner").innerHTML = `
+    <div class="mh"></div>
+    <p class="mt">Quitar despesas — ${MESES[G.vm-1]} ${G.vy}</p>
+    <div style="background:var(--bg);border-radius:var(--rads);padding:10px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13px;color:var(--t2)">${exps.length} pendentes · <strong>${fmt(totalPend)}</strong></span>
+      <div style="display:flex;gap:8px">
+        <button onclick="selecionarTodos(true)"  style="font-size:12px;color:var(--p);background:none;border:none;cursor:pointer;font-weight:600">Todos</button>
+        <button onclick="selecionarTodos(false)" style="font-size:12px;color:var(--t2);background:none;border:none;cursor:pointer">Nenhum</button>
+      </div>
+    </div>
+    <div id="quit-list" style="max-height:40vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+      ${exps.map(e => {
+        const c = catById(e.cat);
+        return `<label style="display:flex;align-items:center;gap:10px;background:var(--surf);border:.5px solid var(--bord);border-radius:var(--rads);padding:10px;cursor:pointer">
+          <input type="checkbox" class="quit-chk" data-id="${esc(e.id)}" data-val="${e.val}" checked style="width:18px;height:18px;accent-color:var(--p);flex-shrink:0" onchange="atualizarTotalQuit()"/>
+          <div class="ci" style="background:${c.bg};width:30px;height:30px;font-size:13px;flex-shrink:0">${c.emoji}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(e.desc)}</div>
+            <div style="font-size:11px;color:var(--t2)">${c.label} · ${fmtD(e.date)}</div>
+          </div>
+          <div style="font-size:13px;font-weight:700;flex-shrink:0">${fmt(e.val)}</div>
+        </label>`;
+      }).join("")}
+    </div>
+    <div style="background:var(--gl);border-radius:var(--rads);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:13px;color:var(--gd);font-weight:600">Total selecionado</span>
+      <span id="quit-total" style="font-size:16px;font-weight:800;color:var(--gd)">${fmt(totalPend)}</span>
+    </div>
+    <div class="macts">
+      <button class="bc" onclick="fecharModal()">Cancelar</button>
+      <button class="bs green" onclick="confirmarQuitacao('${mk}')">Quitar selecionados</button>
+    </div>`;
+  document.getElementById("mbg").style.display = "flex";
+}
+
+function selecionarTodos(sel) {
+  document.querySelectorAll(".quit-chk").forEach(c => { c.checked = sel; });
+  atualizarTotalQuit();
+}
+
+function atualizarTotalQuit() {
+  var total = 0;
+  document.querySelectorAll(".quit-chk:checked").forEach(c => { total += parseFloat(c.dataset.val) || 0; });
+  const el = document.getElementById("quit-total");
+  if (el) el.textContent = fmt(total);
+}
+
+async function confirmarQuitacao(mk) {
+  const chks = document.querySelectorAll(".quit-chk:checked");
+  if (!chks.length) { toast("Selecione ao menos uma despesa"); return; }
+  const ids = Array.from(chks).map(c => c.dataset.id);
+  fecharModal();
+  load("Quitando...");
   try {
-    await api({action:'updateProfile',token:S.token,name,photo:S.profile.photo||''});
-    S.profile.name=name;
-    updateTopbar();
-    toast('Perfil salvo');
-  } catch(e){toast('Erro ao salvar');}
-  finally{hideLoad();}
+    const r = await api({ action:"settleExpenses", token:G.token, ids:ids, month:mk });
+    if (!r.ok) { toast(r.error || "Erro ao quitar"); return; }
+    // Atualiza estado local
+    const idSet = new Set(ids);
+    G.expenses.filter(e => idSet.has(e.id)).forEach(e => {
+      e.settled = true; e.settledAt = hoje(); e.settledMonth = mk;
+    });
+    toast(`✅ ${r.settledCount} despesa${r.settledCount>1?"s":""} quitada${r.settledCount>1?"s":""} · ${fmt(r.totalValue||0)}`);
+    renderTab();
+  } catch(e) { toast("Erro de conexão"); console.error(e); }
+  finally { hideLoad(); }
 }
-function useGooglePhoto() {
-  // Re-faz o login Google para pegar foto atualizada
-  toast('Foto do Google será usada no próximo login');
+
+// Quitar o mês inteiro (atalho rápido — sem modal)
+async function quitarMes() {
+  const mk   = mkey(G.vy, G.vm);
+  const pend = expDoMes(G.vy, G.vm).filter(e => !e.settled);
+  if (!pend.length) { toast("Nenhuma despesa pendente"); return; }
+  // Usa o modal de seleção (todos pré-selecionados)
+  abrirModalQuitacao();
 }
-function handlePhotoUpload(event) {
-  const file=event.target.files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const data=e.target.result;
-    // Redimensiona para base64 pequeno
-    const img=new Image();
-    img.onload=()=>{
-      const canvas=document.createElement('canvas');
-      const size=Math.min(img.width,img.height,200);
-      canvas.width=size; canvas.height=size;
-      const ctx2=canvas.getContext('2d');
-      ctx2.drawImage(img,0,0,size,size);
-      const b64=canvas.toDataURL('image/jpeg',0.7);
-      S.profile.photo=b64;
-      renderTab(); // re-renderiza o perfil
+
+// ================================================================
+//  PERFIL ACTIONS
+// ================================================================
+async function salvarPerfil() {
+  const nome = document.getElementById("p-nome").value.trim();
+  load("Salvando...");
+  try {
+    const r = await api({ action:"updateProfile", token:G.token, name:nome, photo:G.profile.photo||"" });
+    if (r.ok) { G.profile.name = nome; atualizarTop(); toast("Perfil salvo ✓"); }
+    else toast(r.error||"Erro");
+  } catch(e) { toast("Erro de conexão"); }
+  finally { hideLoad(); }
+}
+function usarFotoGoogle() { toast("A foto do Google é usada automaticamente no login"); }
+function uploadFoto(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e2 => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const sz = Math.min(img.width, img.height, 200);
+      canvas.width = sz; canvas.height = sz;
+      canvas.getContext("2d").drawImage(img, 0, 0, sz, sz);
+      G.profile.photo = canvas.toDataURL("image/jpeg", .75);
+      renderTab();
     };
-    img.src=data;
+    img.src = e2.target.result;
   };
   reader.readAsDataURL(file);
 }
-function triggerPhotoOptions() { document.getElementById('photo-file').click(); }
 
-// ============================================================
+// ================================================================
+//  ADMIN ACTIONS
+// ================================================================
+async function addEmail() {
+  const email = document.getElementById("new-email").value.trim();
+  if (!email) { toast("Digite um e-mail"); return; }
+  load("Adicionando...");
+  try {
+    const r = await api({ action:"addAllowedEmail", token:G.token, email });
+    if (!r.ok) { toast(r.error||"Erro"); return; }
+    G.aEmails.push({ email, name:"" });
+    document.getElementById("new-email").value = "";
+    toast("E-mail adicionado ✓");
+    document.getElementById("tab-cont").innerHTML = htmlAdmin();
+  } catch(e) { toast("Erro de conexão"); }
+  finally { hideLoad(); }
+}
+async function remEmail(email) {
+  if (!confirm("Remover " + email + "?")) return;
+  load("Removendo...");
+  try {
+    const r = await api({ action:"removeAllowedEmail", token:G.token, email });
+    if (!r.ok) { toast(r.error||"Erro"); return; }
+    G.aEmails = G.aEmails.filter(e => e.email !== email);
+    toast("Removido");
+    document.getElementById("tab-cont").innerHTML = htmlAdmin();
+  } catch(e) { toast("Erro"); }
+  finally { hideLoad(); }
+}
+async function addAdm() {
+  const email = document.getElementById("new-admin").value.trim();
+  if (!email) { toast("Digite um e-mail"); return; }
+  load("Adicionando...");
+  try {
+    const r = await api({ action:"addAdmin", token:G.token, email });
+    if (!r.ok) { toast(r.error||"Erro"); return; }
+    G.aAdmins.push({ email, name:"" });
+    document.getElementById("new-admin").value = "";
+    toast("Admin adicionado ✓");
+    document.getElementById("tab-cont").innerHTML = htmlAdmin();
+  } catch(e) { toast("Erro"); }
+  finally { hideLoad(); }
+}
+async function remAdm(email) {
+  if (!confirm("Remover admin " + email + "?")) return;
+  load("Removendo...");
+  try {
+    const r = await api({ action:"removeAdmin", token:G.token, email });
+    if (!r.ok) { toast(r.error||"Erro"); return; }
+    G.aAdmins = G.aAdmins.filter(a => a.email !== email);
+    toast("Removido");
+    document.getElementById("tab-cont").innerHTML = htmlAdmin();
+  } catch(e) { toast("Erro"); }
+  finally { hideLoad(); }
+}
+function abaAdmin(tab) { G.adminTab = tab; document.getElementById("tab-cont").innerHTML = htmlAdmin(); }
+
+// ================================================================
 //  NOTIFICAÇÕES
-// ============================================================
-function loadSeenIds() {
-  const saved=localStorage.getItem(SEEN_KEY+S.email);
-  S.seenIds=saved?new Set(JSON.parse(saved)):new Set();
+// ================================================================
+function carregarSeenIds() {
+  const s = localStorage.getItem(K_SEEN + G.email);
+  G.seenIds = s ? new Set(JSON.parse(s)) : new Set();
 }
-function saveSeenIds() { localStorage.setItem(SEEN_KEY+S.email,JSON.stringify([...S.seenIds])); }
-function markAllRead() {
-  S.expenses.filter(e=>e.addedBy!==S.email).forEach(e=>S.seenIds.add(e.id));
-  saveSeenIds(); updateNotifCount();
+function salvarSeenIds() { localStorage.setItem(K_SEEN + G.email, JSON.stringify([...G.seenIds])); }
+function marcarLidas() {
+  G.expenses.filter(e => e.addedBy !== G.email).forEach(e => G.seenIds.add(e.id));
+  salvarSeenIds();
+  atualizarNotif();
 }
-function updateNotifCount() {
-  const n=S.expenses.filter(e=>e.addedBy!==S.email&&!S.seenIds.has(e.id)).length;
-  const el=document.getElementById('ncount');
-  if(el){el.style.display=n>0?'flex':'none';el.textContent=n;}
+function atualizarNotif() {
+  const n = G.expenses.filter(e => e.addedBy !== G.email && !G.seenIds.has(e.id)).length;
+  const el = document.getElementById("n-count");
+  if (el) { el.style.display = n > 0 ? "flex" : "none"; el.textContent = n; }
 }
 
-// ============================================================
-//  UTILS
-// ============================================================
-function cat(id)    { return CATS.find(c=>c.id===id)||CATS[5]; }
-function fmt(v)     { return 'R$\u00A0'+Number(v||0).toFixed(2).replace('.',','); }
-function fmtD(s)    { return String(s||'').split('T')[0].split('-').reverse().join('/'); }
-function todayStr() { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function mkey(y,m)  { return y+'-'+String(m).padStart(2,'0'); }
-function esc(s)     { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function expForMonth(y,m){ const k=mkey(y,m); return S.expenses.filter(e=>String(e.date).startsWith(k)); }
-function monthNav() {
-  return `<div class="mnav">
-    <button onclick="prevMonth()">‹</button>
-    <span class="mnl">${MESES[S.vm-1]} ${S.vy}</span>
-    <button onclick="nextMonth()">›</button>
-  </div>`;
+// ================================================================
+//  UTILITÁRIOS
+// ================================================================
+function toggleExp(id) { G.openExp = G.openExp===id?null:id; G.seenIds.add(id); salvarSeenIds(); renderTab(); }
+function toggleHist(k)  { G.openHist = G.openHist===k?null:k; renderTab(); }
+function irMes(ev,y,m)  { ev.stopPropagation(); G.vy=y; G.vm=m; G.openHist=null; irTab("despesas"); }
+function prevMes()      { if(G.vm===1){G.vm=12;G.vy--;}else G.vm--; G.openExp=null; renderTab(); }
+function nextMes()      { if(G.vm===12){G.vm=1;G.vy++;}else G.vm++; G.openExp=null; renderTab(); }
+function navMes()       { return `<div class="mnav"><button onclick="prevMes()">‹</button><span class="mnl">${MESES[G.vm-1]} ${G.vy}</span><button onclick="nextMes()">›</button></div>`; }
+function catById(id)    { return CATS.find(c=>c.id===id)||CATS[5]; }
+function fmt(v)         { return "R$\u00A0" + Number(v||0).toFixed(2).replace(".",","); }
+function fmtD(s)        { return String(s||"").split("T")[0].split("-").reverse().join("/"); }
+function hoje()         { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function mkey(y,m)      { return y+"-"+String(m).padStart(2,"0"); }
+function esc(s)         { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function expDoMes(y,m)  { const k=mkey(y,m); return G.expenses.filter(e=>String(e.date).startsWith(k)); }
+function nomeUsuario(email) {
+  if (!email) return "?";
+  if (email === G.email) return "Eu";
+  const u = (G.users||[]).find(u=>u.email===email);
+  return u&&u.name ? u.name.split(" ")[0] : email.split("@")[0];
 }
-function calcSaldo(exps){
+function calcSaldo(exps) {
   let dMe=0,dSp=0,total=0;
-  exps.forEach(e=>{total+=e.val;if(e.payer===S.email)dSp+=e.val*((100-e.pctMe)/100);else dMe+=e.val*(e.pctMe/100);});
-  return{total,dMe,dSp,saldo:dSp-dMe};
+  exps.forEach(e => {
+    total += e.val;
+    if (e.payer === G.email) dSp += e.val*((100-e.pctMe)/100);
+    else dMe += e.val*(e.pctMe/100);
+  });
+  return { total, dMe, dSp, saldo:dSp-dMe };
 }
-function getUserDisplayName(email) {
-  if (!email) return '?';
-  if (email===S.email) return 'Eu';
-  const u=S.users.find(u=>u.email===email);
-  return u&&u.name ? u.name.split(' ')[0] : email.split('@')[0];
-}
-function userAvSmall(emailOrKey) {
-  if (emailOrKey===S.email||emailOrKey==='me') {
-    if (S.profile&&S.profile.photo) return `<img src="${S.profile.photo}" style="width:100%;height:100%;object-fit:cover"/>`;
-    return (S.profile&&S.profile.name||S.email||'EU').substring(0,2).toUpperCase();
-  }
-  return 'EL';
-}
-function showLoad(msg){ document.getElementById('lmsg').textContent=msg||'Carregando...'; document.getElementById('lov').style.display='flex'; }
-function hideLoad()   { document.getElementById('lov').style.display='none'; }
-function toast(msg){
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.classList.add('on');
-  setTimeout(()=>el.classList.remove('on'),2800);
+function load(msg) { document.getElementById("lov-msg").textContent=msg||"Carregando..."; document.getElementById("lov").style.display="flex"; }
+function hideLoad()    { document.getElementById("lov").style.display="none"; }
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg; el.classList.add("on");
+  setTimeout(() => el.classList.remove("on"), 2800);
 }
 
-// Service Worker
-if('serviceWorker' in navigator){
-  const sw=`const C='fc-v2';self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(['.']))));self.addEventListener('fetch',e=>{if(e.request.url.includes('script.google.com'))return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});`;
-  const b=new Blob([sw],{type:'application/javascript'});
-  navigator.serviceWorker.register(URL.createObjectURL(b)).catch(()=>{});
+// Service Worker para cache offline
+if ("serviceWorker" in navigator) {
+  const sw = `const C="fc3";self.addEventListener("install",e=>e.waitUntil(caches.open(C).then(c=>c.addAll(["."]))));self.addEventListener("fetch",e=>{if(e.request.url.includes("script.google.com"))return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});`;
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:"application/javascript"}))).catch(()=>{});
 }
 </script>
 </body>
