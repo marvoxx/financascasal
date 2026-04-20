@@ -16,7 +16,7 @@
 :root{
   --p:#534AB7;--pl:#EEEDFE;--pd:#3C3489;
   --g:#1D9E75;--gl:#E1F5EE;--gd:#085041;
-  --r:#993C1D;--a:#BA7517;--al:#FAEEDA;
+  --r:#993C1D;--rl:#FAECE7;--a:#BA7517;--al:#FAEEDA;
   --bg:#f2f2f7;--surf:#fff;--bord:rgba(0,0,0,.1);
   --t:#1a1a1a;--t2:#666;--t3:#999;
   --rad:14px;--rads:8px;
@@ -279,7 +279,7 @@ let G = {
   url:"", token:"", email:"", profile:{}, isAdmin:false,
   tab:"despesas",
   vm: new Date().getMonth()+1, vy: new Date().getFullYear(),
-  expenses:[], settlements:[], users:[],
+  expenses:[], settlements:[], payments:[], users:[],
   openExp:null, openHist:null, editId:null,
   seenIds: new Set(),
   form:{desc:"",val:"",cat:"mercado",payer:"",pct:50},
@@ -386,7 +386,7 @@ function clearSessao() {
 
 function sair() {
   clearSessao();
-  G.expenses = []; G.settlements = []; G.aEmails = []; G.aAdmins = [];
+  G.expenses = []; G.settlements = []; G.payments = []; G.aEmails = []; G.aAdmins = [];
   mostrar("scr-login");
   setTimeout(initGSI, 200);
 }
@@ -396,7 +396,7 @@ function entrarApp() {
   atualizarTop();
   if (G.isAdmin) document.getElementById("nav-admin").style.display = "";
   carregarSeenIds();
-  Promise.all([fetchDespesas(), fetchAcertos()]).then(() => {
+  Promise.all([fetchDespesas(), fetchAcertos(), fetchPagamentos()]).then(() => {
     irTab("despesas");
   });
 }
@@ -448,6 +448,13 @@ async function fetchAcertos() {
     const r = await api({ action:"getSettlements", token:G.token });
     if (r.ok) G.settlements = r.settlements || [];
   } catch(e) { console.error("fetchAcertos", e); }
+}
+
+async function fetchPagamentos() {
+  try {
+    const r = await api({ action:"getPayments", token:G.token });
+    if (r.ok) G.payments = r.payments || [];
+  } catch(e) { console.error("fetchPagamentos", e); }
 }
 
 // ================================================================
@@ -535,40 +542,129 @@ function itemExp(e) {
 //  BALANÇO
 // ================================================================
 function renderBalanco() {
-  const exps = expDoMes(G.vy, G.vm);
+  const exps  = expDoMes(G.vy, G.vm);
+  const todos = G.expenses; // todas as despesas para saldo global
   const {total, dMe, dSp, saldo} = calcSaldo(exps);
-  const pct  = total > 0 ? Math.round(dMe/total*100) : 50;
-  const sl   = saldo>.01?`Me devem ${fmt(saldo)}`:saldo<-.01?`Devo ${fmt(Math.abs(saldo))}`:"Quites!";
-  const sc   = saldo>.01?"#0F6E56":saldo<-.01?"var(--r)":"#0F6E56";
-  const mk   = mkey(G.vy, G.vm);
-  const set  = G.settlements.find(s => s.month === mk);
-  const qCt  = exps.filter(e => e.settled).length;
+  const {saldo: saldoGlobal}     = calcSaldo(todos);
+
+  const pct = total > 0 ? Math.round(dMe/total*100) : 50;
+  const mk  = mkey(G.vy, G.vm);
+  const set = G.settlements.find(s => s.month === mk);
+  const qCt = exps.filter(e => e.settled).length;
+
+  // Identifica devedor/credor do mês
+  // saldo > 0 → ela me deve; saldo < 0 → eu devo a ela
+  const euDevo    = saldo < -.01;
+  const elaDeve   = saldo >  .01;
+  const saldoAbs  = Math.abs(saldo);
+  const devedorNome   = euDevo  ? "Você"  : "Ela";
+  const credorNome    = euDevo  ? "Ela"   : "Você";
+  const devedorCor    = euDevo  ? "var(--r)" : "#0F6E56";
+  const devedorIcone  = euDevo  ? "av-p"    : "av-g";
+  const credorIcone   = euDevo  ? "av-g"    : "av-p";
+
+  // Pagamentos do mês atual para o histórico
+  const pagsMes = G.payments.filter(p => p.data && p.data.startsWith(mk));
+
+  // Categorias do mês
   const byCat = {};
-  exps.forEach(e => { if(!byCat[e.cat])byCat[e.cat]={t:0,n:0,s:0}; byCat[e.cat].t+=e.val; byCat[e.cat].n++; if(e.settled)byCat[e.cat].s+=e.val; });
+  exps.forEach(e => {
+    if(!byCat[e.cat]) byCat[e.cat]={t:0,n:0,s:0};
+    byCat[e.cat].t+=e.val; byCat[e.cat].n++;
+    if(e.settled) byCat[e.cat].s+=e.val;
+  });
   const cats = Object.entries(byCat).sort((a,b)=>b[1].t-a[1].t);
+
   return `
     ${navMes()}
+
+    <!-- Card saldo do mês -->
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="display:flex;align-items:center;gap:7px"><div class="av av-p" style="width:26px;height:26px;font-size:9px">EU</div><span style="font-size:14px;font-weight:700">Eu</span></div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <div class="av av-p" style="width:26px;height:26px;font-size:9px">EU</div>
+          <span style="font-size:14px;font-weight:700">Eu</span>
+        </div>
         <span style="font-size:13px;color:var(--t2)">${fmt(total)} total</span>
-        <div style="display:flex;align-items:center;gap:7px"><span style="font-size:14px;font-weight:700">Ela</span><div class="av av-g" style="width:26px;height:26px;font-size:9px">EL</div></div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:14px;font-weight:700">Ela</span>
+          <div class="av av-g" style="width:26px;height:26px;font-size:9px">EL</div>
+        </div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--t2)"><span>${fmt(dMe)}</span><span>${fmt(dSp)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--t2)">
+        <span>${fmt(dMe)}</span><span>${fmt(dSp)}</span>
+      </div>
       <div class="bbar"><div class="bfill" style="width:${pct}%"></div></div>
-      <div class="bstat"><strong style="color:${sc}">${sl}</strong></div>
-      <div style="font-size:12px;color:var(--t2);text-align:center;margin-top:6px">${qCt} de ${exps.length} despesas quitadas</div>
-      ${set
-        ? `<div class="setb">✅ Quitado em ${fmtD(set.settledDate)} · ${set.expenseCount||0} despesas · ${fmt(set.totalValue||0)}</div>`
-        : `<button class="bs green" style="width:100%;margin-top:10px;padding:12px" onclick="abrirModalQuitacao()">Quitar despesas do mês</button>`}
+      <div style="font-size:12px;color:var(--t2);text-align:center;margin-top:6px">
+        ${qCt} de ${exps.length} despesas quitadas individualmente
+      </div>
+      ${set ? `<div class="setb">✅ Quitado em ${fmtD(set.settledDate)} · ${set.expenseCount||0} despesas · ${fmt(set.totalValue||0)}</div>` : ""}
     </div>
-    ${cats.length?"<p class='sec'>Por categoria</p>":""}
-    ${cats.map(([cid,d])=>{const c=catById(cid);const pct2=total>0?Math.round(d.t/total*100):0;const spct=d.t>0?Math.round(d.s/d.t*100):0;
+
+    <!-- Card devedor — destaque visual -->
+    ${Math.abs(saldo) > .01 ? `
+    <div class="card" style="margin-bottom:12px;border:.5px solid ${devedorCor}30;background:${euDevo?"var(--rl)":"var(--gl)"}">
+      <p class="sec" style="margin-bottom:10px">Quem deve o quê</p>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div class="av ${devedorIcone}" style="width:42px;height:42px;font-size:14px">${euDevo?"EU":"EL"}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;color:var(--t2)">${devedorNome} deve para ${credorNome}</div>
+          <div style="font-size:22px;font-weight:800;color:${devedorCor}">${fmt(saldoAbs)}</div>
+        </div>
+        <div class="av ${credorIcone}" style="width:42px;height:42px;font-size:14px">${euDevo?"EL":"EU"}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="bs green" style="flex:2;padding:11px" onclick="abrirModalPagamento(${saldoAbs.toFixed(2)}, '${euDevo?"eu":"ela"}')">
+          💳 Registrar pagamento
+        </button>
+        <button class="bs" style="flex:1;padding:11px" onclick="abrirModalQuitacao()">
+          ✅ Quitar despesas
+        </button>
+      </div>
+    </div>` : `
+    <div class="card" style="margin-bottom:12px;border:.5px solid #1D9E7530;background:var(--gl)">
+      <div style="text-align:center;padding:8px 0">
+        <div style="font-size:24px;margin-bottom:4px">🎉</div>
+        <div style="font-size:16px;font-weight:700;color:var(--gd)">Vocês estão quites este mês!</div>
+      </div>
+    </div>`}
+
+    <!-- Histórico de pagamentos do mês -->
+    ${pagsMes.length ? `
+    <p class="sec">Pagamentos registrados — ${MESES[G.vm-1]}</p>
+    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px">
+      ${pagsMes.map(p => {
+        const euPaguei = p.pagador === G.email;
+        return `<div class="card" style="padding:12px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:38px;height:38px;border-radius:50%;background:${euPaguei?"var(--pl)":"var(--gl)"};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💸</div>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:700">${euPaguei?"Você pagou para ela":"Ela pagou para você"}</div>
+              <div style="font-size:12px;color:var(--t2)">${fmtD(p.data)} · ${p.despesasQuitadas} despesa${p.despesasQuitadas!==1?"s":""} quitada${p.despesasQuitadas!==1?"s":""}</div>
+              ${p.obs ? `<div style="font-size:12px;color:var(--t2);font-style:italic">"${esc(p.obs)}"</div>` : ""}
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:15px;font-weight:800;color:${euPaguei?"var(--r)":"#0F6E56"}">${euPaguei?"-":"+"} ${fmt(p.valor)}</div>
+              <div style="font-size:11px;color:var(--t2)">Saldo: ${fmt(p.saldoDepois)}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>` : ""}
+
+    <!-- Por categoria -->
+    ${cats.length ? `<p class="sec">Por categoria</p>` : ""}
+    ${cats.map(([cid,d])=>{
+      const c=catById(cid);
+      const pct2=total>0?Math.round(d.t/total*100):0;
+      const spct=d.t>0?Math.round(d.s/d.t*100):0;
       return `<div class="card" style="margin-bottom:8px">
         <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px">
           <div class="ci" style="background:${c.bg};width:30px;height:30px;font-size:13px">${c.emoji}</div>
-          <div style="flex:1"><div style="font-size:14px;font-weight:700">${c.label}</div>
-            <div style="font-size:12px;color:var(--t2)">${d.n} despesa${d.n>1?"s":""} · ${spct}% quitado</div></div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700">${c.label}</div>
+            <div style="font-size:12px;color:var(--t2)">${d.n} despesa${d.n>1?"s":""} · ${spct}% quitado</div>
+          </div>
           <div style="font-size:14px;font-weight:700">${fmt(d.t)}</div>
           <div style="font-size:12px;color:var(--t2);min-width:30px;text-align:right">${pct2}%</div>
         </div>
@@ -1051,7 +1147,136 @@ async function quitarUma(ev, id, desc) {
   finally { hideLoad(); }
 }
 
-// Abre modal de quitação com lista de despesas selecionáveis
+// ================================================================
+//  MODAL — REGISTRAR PAGAMENTO
+// ================================================================
+function abrirModalPagamento(saldoSugerido, quemDeve) {
+  // quemDeve: "eu" → eu pago para ela; "ela" → ela paga para mim
+  const euPago     = quemDeve === "eu";
+  const pagadorLabel   = euPago ? "Você" : "Ela";
+  const recebedorLabel = euPago ? "Ela"  : "Você";
+  const pagAvClass     = euPago ? "av-p" : "av-g";
+  const recAvClass     = euPago ? "av-g" : "av-p";
+  const pagIni         = euPago ? "EU"   : "EL";
+  const recIni         = euPago ? "EL"   : "EU";
+  const sugerido       = Number(saldoSugerido).toFixed(2);
+
+  document.getElementById("mod-inner").innerHTML = `
+    <div class="mh"></div>
+    <p class="mt">Registrar pagamento</p>
+
+    <!-- Quem paga para quem -->
+    <div style="display:flex;align-items:center;gap:12px;background:var(--bg);border-radius:var(--rads);padding:12px;margin-bottom:14px">
+      <div style="text-align:center;flex:1">
+        <div class="av ${pagAvClass}" style="width:40px;height:40px;font-size:14px;margin:0 auto 4px">${pagIni}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--t2)">${pagadorLabel}</div>
+        <div style="font-size:11px;color:var(--t2)">paga</div>
+      </div>
+      <div style="font-size:24px;color:var(--t2)">→</div>
+      <div style="text-align:center;flex:1">
+        <div class="av ${recAvClass}" style="width:40px;height:40px;font-size:14px;margin:0 auto 4px">${recIni}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--t2)">${recebedorLabel}</div>
+        <div style="font-size:11px;color:var(--t2)">recebe</div>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Valor pago (R$)</label>
+      <input class="fi" id="pag-valor" type="number" inputmode="decimal"
+        value="${sugerido}" placeholder="0,00"
+        style="font-size:22px;font-weight:700;text-align:center"
+        oninput="atualizarPreviewPag(this.value, ${sugerido})"/>
+      <div style="font-size:12px;color:var(--t2);text-align:center;margin-top:5px">
+        Saldo devedor: <strong>${fmt(Number(sugerido))}</strong> — pode ser um valor menor
+      </div>
+    </div>
+
+    <div id="pag-preview" style="background:var(--gl);border-radius:var(--rads);padding:10px 12px;margin-bottom:12px;font-size:13px;color:var(--gd)">
+      Informe o valor para ver a prévia.
+    </div>
+
+    <div class="fg">
+      <label class="fl">Data do pagamento</label>
+      <input class="fi" id="pag-data" type="date" value="${hoje()}"/>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Observação (opcional)</label>
+      <input class="fi" id="pag-obs" placeholder="Ex: Pix de domingo" maxlength="100"/>
+    </div>
+
+    <div class="macts">
+      <button class="bc" onclick="fecharModal()">Cancelar</button>
+      <button class="bs green" onclick="confirmarPagamento('${quemDeve}', ${sugerido})">Confirmar pagamento</button>
+    </div>`;
+
+  document.getElementById("mbg").style.display = "flex";
+  // Dispara prévia com o valor sugerido
+  setTimeout(() => atualizarPreviewPag(sugerido, sugerido), 50);
+}
+
+function atualizarPreviewPag(valorStr, saldoTotal) {
+  const el = document.getElementById("pag-preview");
+  if (!el) return;
+  const val = parseFloat(valorStr) || 0;
+  const st  = parseFloat(saldoTotal) || 0;
+  if (val <= 0) { el.textContent = "Informe um valor válido."; return; }
+
+  // Simula quantas despesas seriam quitadas (das mais antigas pendentes)
+  const pendentes = G.expenses
+    .filter(e => !e.settled)
+    .sort((a,b) => a.date < b.date ? -1 : 1);
+
+  let acum = 0, count = 0;
+  for (const e of pendentes) {
+    if (acum >= val) break;
+    if (e.val <= val - acum) { acum += e.val; count++; }
+  }
+
+  const resto = Math.max(0, st - val);
+  if (val >= st) {
+    el.innerHTML = `✅ Pagamento total — quita aproximadamente <strong>${count} despesa${count!==1?"s":""}</strong> (${fmt(acum)}) · Saldo após: <strong>${fmt(resto)}</strong>`;
+  } else {
+    el.innerHTML = `⚡ Pagamento parcial — quita aproximadamente <strong>${count} despesa${count!==1?"s":""}</strong> (${fmt(acum)}) · Saldo restante: <strong>${fmt(resto)}</strong>`;
+  }
+}
+
+async function confirmarPagamento(quemDeve, saldoSugerido) {
+  const valor = parseFloat(document.getElementById("pag-valor").value) || 0;
+  const data  = document.getElementById("pag-data").value || hoje();
+  const obs   = document.getElementById("pag-obs").value.trim();
+
+  if (valor <= 0) { toast("Informe um valor válido"); return; }
+
+  // Define pagador e recebedor como e-mails
+  // "eu" → eu pago (G.email → "outra"); "ela" → ela paga ("outra" → G.email)
+  const pagadorEmail   = quemDeve === "eu" ? G.email : "outra";
+  const recebedorEmail = quemDeve === "eu" ? "outra" : G.email;
+
+  fecharModal();
+  load("Registrando pagamento...");
+  try {
+    const r = await api({
+      action    : "registerPayment",
+      token     : G.token,
+      valor,
+      recebedor : recebedorEmail,
+      data,
+      obs
+    });
+    if (!r.ok) { toast(r.error || "Erro ao registrar"); return; }
+
+    // Atualiza estado local — recarrega despesas e pagamentos do servidor
+    await Promise.all([fetchDespesas(), fetchPagamentos()]);
+
+    toast(`✅ ${r.despesasQuitadas} despesa${r.despesasQuitadas!==1?"s":""} quitada${r.despesasQuitadas!==1?"s":""} · ${fmt(r.valorQuitado)}`);
+    renderTab();
+  } catch(e) { toast("Erro de conexão"); console.error(e); }
+  finally { hideLoad(); }
+}
+
+// ================================================================
+//  MODAL — QUITAR DESPESAS (seleção manual)
 function abrirModalQuitacao() {
   const mk   = mkey(G.vy, G.vm);
   const exps = expDoMes(G.vy, G.vm).filter(e => !e.settled);
