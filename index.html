@@ -241,7 +241,7 @@ select.rsel{width:100%;padding:8px 10px;border:.5px solid var(--bord);border-rad
 <div id="mbg" class="mbg" style="display:none" onclick="fecharSeExt(event)">
   <div class="mod" id="mod-inner"><div class="mh"></div></div>
 </div>
-<!-- Loading --> 
+<!-- Loading -->
 <div id="lov" class="lov" style="display:none">
   <div class="lbox"><div class="lspin"></div><span id="lov-msg">Carregando...</span></div>
 </div>
@@ -288,7 +288,7 @@ let G = {
   rMetric:"total", rDim:"cat", rView:"chart",
   rData:null, rChart:null,
   // Admin
-  adminTab:"emails", aEmails:[], aAdmins:[]
+  adminTab:"grupos", aEmails:[], aAdmins:[]
 };
 
 // ================================================================
@@ -1079,7 +1079,7 @@ function htmlRelResumo() {
 // ================================================================
 function abrirAdd() {
   G.editId = null;
-  G.form = { desc:"", val:"", cat:"mercado", payer:G.email, pct:50 };
+  G.form = { desc:"", val:"", cat:"mercado", grupo:"", payer:G.email, pct:50 };
   abrirModal();
 }
 function editarExp(ev, id) {
@@ -1521,32 +1521,50 @@ const ICONES_GRUPO = ["🏠","🚗","🍽️","💊","📚","🏋️","✈️","
 
 function htmlAdminGrupos() {
   const lista = G.grupos.length
-    ? G.grupos.map(g => `
-      <div class="acard" id="gc-${esc(g.id)}">
-        <div style="width:40px;height:40px;border-radius:var(--rads);background:${esc(g.cor)}22;border:2px solid ${esc(g.cor)};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${esc(g.icone)}</div>
-        <div class="acard-info"><h3>${esc(g.nome)}</h3><p style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:${esc(g.cor)};display:inline-block"></span>${esc(g.cor)}</p></div>
-        <button class="ebtn" style="flex:0;padding:6px 10px;font-size:12px" onclick="abrirEditGrupo('${esc(g.id)}','${esc(g.nome)}','${esc(g.cor)}','${esc(g.icone)}')">Editar</button>
+    ? G.grupos.map((g, idx) => `
+      <div class="acard">
+        <div style="width:40px;height:40px;border-radius:var(--rads);background:${g.cor}22;border:2px solid ${g.cor};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${g.icone}</div>
+        <div class="acard-info"><h3>${esc(g.nome)}</h3>
+          <p style="display:flex;align-items:center;gap:5px">
+            <span style="width:10px;height:10px;border-radius:50%;background:${g.cor};display:inline-block;flex-shrink:0"></span>
+            ${esc(g.cor)}
+          </p>
+        </div>
+        <button class="ebtn" style="flex:0;padding:6px 10px;font-size:12px" onclick="abrirEditGrupo(${idx})">Editar</button>
         <button class="adel" onclick="remGrupo('${esc(g.id)}','${esc(g.nome)}')">Excluir</button>
       </div>`).join("")
-    : '<div class="empty">Nenhum grupo cadastrado ainda.</div>';
+    : '<div class="empty">Nenhum grupo criado ainda.<br>Use o formulário acima para criar o primeiro.</div>';
+
+  const iconeBtns = ICONES_GRUPO.map((ic, i) =>
+    `<button onclick="pickIconeGrupo(${i})" id="igbtn${i}"
+      style="width:38px;height:38px;font-size:20px;border:.5px solid var(--bord);
+             border-radius:var(--rads);background:var(--surf);cursor:pointer">${ic}</button>`
+  ).join("");
+
+  const corBtns = CORES_GRUPO.map((c, i) =>
+    `<button onclick="pickCorGrupo(${i})" id="cgbtn${i}"
+      style="width:32px;height:32px;border-radius:50%;background:${c};
+             border:2px solid transparent;cursor:pointer"></button>`
+  ).join("");
 
   return `
     <div class="card" style="margin-bottom:12px">
       <p class="sec" style="margin-bottom:10px">Novo grupo</p>
-      <div class="fg"><label class="fl">Nome do grupo</label>
+      <div class="fg">
+        <label class="fl">Nome do grupo</label>
         <input class="fi" id="ng-nome" placeholder="Ex: Casa, Carro, Viagem..."/>
       </div>
-      <div class="fg"><label class="fl">Ícone</label>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px" id="ng-icones">
-          ${ICONES_GRUPO.map(ic=>`<button onclick="pickIconeGrupo('${ic}')" style="width:38px;height:38px;font-size:20px;border:.5px solid var(--bord);border-radius:var(--rads);background:var(--surf);cursor:pointer" id="ig-${ic}">${ic}</button>`).join("")}
-        </div>
-        <input class="fi" id="ng-icone" placeholder="Ou cole qualquer emoji" style="margin-top:6px" value="📁"/>
+      <div class="fg">
+        <label class="fl">Ícone</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">${iconeBtns}</div>
+        <input class="fi" id="ng-icone" value="📁" placeholder="Ou cole qualquer emoji"/>
       </div>
-      <div class="fg"><label class="fl">Cor</label>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px">
-          ${CORES_GRUPO.map(c=>`<button onclick="pickCorGrupo('${c}')" style="width:32px;height:32px;border-radius:50%;background:${c};border:2px solid transparent;cursor:pointer" id="cg-${c.replace('#','')}"></button>`).join("")}
-        </div>
-        <input class="fi" id="ng-cor" value="#534AB7" placeholder="#000000" oninput="document.getElementById('ng-cor-prev').style.background=this.value" style="font-family:monospace"/>
+      <div class="fg">
+        <label class="fl">Cor</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">${corBtns}</div>
+        <input class="fi" id="ng-cor" value="#534AB7" placeholder="#000000"
+          oninput="document.getElementById('ng-cor-prev').style.background=this.value"
+          style="font-family:monospace"/>
         <div id="ng-cor-prev" style="margin-top:6px;height:8px;border-radius:4px;background:#534AB7"></div>
       </div>
       <button class="bs" style="width:100%;padding:11px" onclick="addGrupo()">+ Criar grupo</button>
@@ -1555,19 +1573,24 @@ function htmlAdminGrupos() {
     ${lista}`;
 }
 
-function pickIconeGrupo(ic) {
-  document.getElementById("ng-icone").value = ic;
-  document.querySelectorAll("#ng-icones button").forEach(b => b.style.borderColor = "var(--bord)");
-  const btn = document.getElementById("ig-" + ic);
-  if (btn) btn.style.borderColor = "var(--p)";
+function pickIconeGrupo(idx) {
+  const ic = ICONES_GRUPO[idx];
+  if (ic) document.getElementById("ng-icone").value = ic;
+  ICONES_GRUPO.forEach((_, i) => {
+    const b = document.getElementById("igbtn" + i);
+    if (b) b.style.borderColor = (i === idx) ? "var(--p)" : "var(--bord)";
+  });
 }
 
-function pickCorGrupo(cor) {
+function pickCorGrupo(idx) {
+  const cor = CORES_GRUPO[idx];
+  if (!cor) return;
   document.getElementById("ng-cor").value = cor;
   document.getElementById("ng-cor-prev").style.background = cor;
-  document.querySelectorAll("[id^='cg-']").forEach(b => b.style.border = "2px solid transparent");
-  const btn = document.getElementById("cg-" + cor.replace("#",""));
-  if (btn) btn.style.border = "3px solid var(--t)";
+  CORES_GRUPO.forEach((_, i) => {
+    const b = document.getElementById("cgbtn" + i);
+    if (b) b.style.border = (i === idx) ? "3px solid var(--t)" : "2px solid transparent";
+  });
 }
 
 async function addGrupo() {
@@ -1588,29 +1611,38 @@ async function addGrupo() {
   finally { hideLoad(); }
 }
 
-function abrirEditGrupo(id, nome, cor, icone) {
+function abrirEditGrupo(idx) {
+  const g = G.grupos[idx];
+  if (!g) return;
+  const iconeBtns = ICONES_GRUPO.map(ic =>
+    `<button onclick="document.getElementById('eg-icone').value='${ic}'"
+      style="width:34px;height:34px;font-size:17px;border:.5px solid var(--bord);
+             border-radius:var(--rads);background:var(--surf);cursor:pointer">${ic}</button>`
+  ).join("");
+  const corBtns = CORES_GRUPO.map(c =>
+    `<button onclick="document.getElementById('eg-cor').value='${c}';document.getElementById('eg-cor-prev').style.background='${c}'"
+      style="width:28px;height:28px;border-radius:50%;background:${c};border:none;cursor:pointer"></button>`
+  ).join("");
   document.getElementById("mod-inner").innerHTML = `
     <div class="mh"></div>
     <p class="mt">Editar grupo</p>
     <div class="fg"><label class="fl">Nome</label>
-      <input class="fi" id="eg-nome" value="${esc(nome)}"/>
+      <input class="fi" id="eg-nome" value="${esc(g.nome)}"/>
     </div>
     <div class="fg"><label class="fl">Ícone</label>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">
-        ${ICONES_GRUPO.map(ic=>`<button onclick="document.getElementById('eg-icone').value='${ic}'" style="width:36px;height:36px;font-size:18px;border:.5px solid var(--bord);border-radius:var(--rads);background:var(--surf);cursor:pointer">${ic}</button>`).join("")}
-      </div>
-      <input class="fi" id="eg-icone" value="${esc(icone)}" placeholder="Emoji"/>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">${iconeBtns}</div>
+      <input class="fi" id="eg-icone" value="${g.icone}" placeholder="Emoji"/>
     </div>
     <div class="fg"><label class="fl">Cor</label>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px">
-        ${CORES_GRUPO.map(c=>`<button onclick="document.getElementById('eg-cor').value='${c}';document.getElementById('eg-cor-prev').style.background='${c}'" style="width:30px;height:30px;border-radius:50%;background:${c};border:none;cursor:pointer"></button>`).join("")}
-      </div>
-      <input class="fi" id="eg-cor" value="${esc(cor)}" oninput="document.getElementById('eg-cor-prev').style.background=this.value" style="font-family:monospace"/>
-      <div id="eg-cor-prev" style="margin-top:6px;height:8px;border-radius:4px;background:${esc(cor)}"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px">${corBtns}</div>
+      <input class="fi" id="eg-cor" value="${esc(g.cor)}"
+        oninput="document.getElementById('eg-cor-prev').style.background=this.value"
+        style="font-family:monospace"/>
+      <div id="eg-cor-prev" style="margin-top:6px;height:8px;border-radius:4px;background:${esc(g.cor)}"></div>
     </div>
     <div class="macts">
       <button class="bc" onclick="fecharModal()">Cancelar</button>
-      <button class="bs" onclick="salvarEditGrupo('${esc(id)}')">Salvar</button>
+      <button class="bs" onclick="salvarEditGrupo('${esc(g.id)}')">Salvar</button>
     </div>`;
   document.getElementById("mbg").style.display = "flex";
 }
