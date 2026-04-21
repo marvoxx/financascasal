@@ -241,7 +241,7 @@ select.rsel{width:100%;padding:8px 10px;border:.5px solid var(--bord);border-rad
 <div id="mbg" class="mbg" style="display:none" onclick="fecharSeExt(event)">
   <div class="mod" id="mod-inner"><div class="mh"></div></div>
 </div>
-<!-- Loading -->
+<!-- Loading --> 
 <div id="lov" class="lov" style="display:none">
   <div class="lbox"><div class="lspin"></div><span id="lov-msg">Carregando...</span></div>
 </div>
@@ -279,10 +279,10 @@ let G = {
   url:"", token:"", email:"", profile:{}, isAdmin:false,
   tab:"despesas",
   vm: new Date().getMonth()+1, vy: new Date().getFullYear(),
-  expenses:[], settlements:[], payments:[], users:[],
+  expenses:[], settlements:[], payments:[], grupos:[], users:[],
   openExp:null, openHist:null, editId:null,
   seenIds: new Set(),
-  form:{desc:"",val:"",cat:"mercado",payer:"",pct:50},
+  form:{desc:"",val:"",cat:"mercado",grupo:"",payer:"",pct:50},
   // Relatório
   rStart:"", rEnd:"", rGran:"month", rType:"bar",
   rMetric:"total", rDim:"cat", rView:"chart",
@@ -386,7 +386,7 @@ function clearSessao() {
 
 function sair() {
   clearSessao();
-  G.expenses = []; G.settlements = []; G.payments = []; G.aEmails = []; G.aAdmins = [];
+  G.expenses = []; G.settlements = []; G.payments = []; G.grupos = []; G.aEmails = []; G.aAdmins = [];
   mostrar("scr-login");
   setTimeout(initGSI, 200);
 }
@@ -396,7 +396,7 @@ function entrarApp() {
   atualizarTop();
   if (G.isAdmin) document.getElementById("nav-admin").style.display = "";
   carregarSeenIds();
-  Promise.all([fetchDespesas(), fetchAcertos(), fetchPagamentos()]).then(() => {
+  Promise.all([fetchDespesas(), fetchAcertos(), fetchPagamentos(), fetchGrupos()]).then(() => {
     irTab("despesas");
   });
 }
@@ -457,6 +457,13 @@ async function fetchPagamentos() {
   } catch(e) { console.error("fetchPagamentos", e); }
 }
 
+async function fetchGrupos() {
+  try {
+    const r = await api({ action:"getGrupos", token:G.token });
+    if (r.ok) G.grupos = r.grupos || [];
+  } catch(e) { console.error("fetchGrupos", e); }
+}
+
 // ================================================================
 //  NAVEGAÇÃO
 // ================================================================
@@ -507,12 +514,17 @@ function itemExp(e) {
   const open   = G.openExp === e.id;
   const pme    = e.val * e.pctMe / 100;
   const autor  = nomeUsuario(e.addedBy);
+  // Busca grupo para exibir ícone e cor
+  const grObj  = e.grupo ? G.grupos.find(g => g.id === e.grupo) : null;
+  const grTag  = grObj
+    ? `<span style="background:${grObj.cor}22;color:${grObj.cor};border:.5px solid ${grObj.cor}44;border-radius:20px;font-size:10px;font-weight:700;padding:1px 7px;white-space:nowrap">${grObj.icone} ${esc(grObj.nome)}</span>`
+    : "";
   return `<div class="ei${isNew?" is-new":""}${e.settled?" is-settled":""}" onclick="toggleExp('${esc(e.id)}')">
     <div class="erow">
       <div class="ci" style="background:${c.bg}">${c.emoji}</div>
       <div class="ei2">
         <div class="en">${esc(e.desc)}${isNew?` <span class="bge bge-new">Novo</span>`:""}${e.settled?` <span class="bge bge-set">✅</span>`:""}</div>
-        <div class="em">${c.label} · ${fmtD(e.date)} · <span class="bge bge-p" style="font-size:10px">${autor}</span></div>
+        <div class="em">${grTag}${grTag?" · ":""}${c.label} · ${fmtD(e.date)} · <span class="bge bge-p" style="font-size:10px">${autor}</span></div>
       </div>
       <div class="ea"><div class="eat">${fmt(e.val)}</div><div class="eas">Minha: ${fmt(pme)}</div></div>
     </div>
@@ -776,6 +788,8 @@ async function renderAdmin(el) {
     } catch(e) { toast("Erro ao carregar admin"); }
     finally { hideLoad(); }
   }
+  // Grupos são sempre relidos (podem ter mudado)
+  await fetchGrupos();
   el.innerHTML = htmlAdmin();
 }
 
@@ -783,11 +797,12 @@ function htmlAdmin() {
   const t = G.adminTab;
   return `<p class="sec">Painel de Administração</p>
     <div class="atabs">
-      <button class="at${t==="emails"?" on":""}" onclick="abaAdmin('emails')">E-mails</button>
-      <button class="at${t==="admins"?" on":""}" onclick="abaAdmin('admins')">Admins</button>
-      <button class="at${t==="users"?" on":""}"  onclick="abaAdmin('users')">Usuários</button>
+      <button class="at${t==="grupos"?" on":""}"  onclick="abaAdmin('grupos')">Grupos</button>
+      <button class="at${t==="emails"?" on":""}"  onclick="abaAdmin('emails')">E-mails</button>
+      <button class="at${t==="admins"?" on":""}"  onclick="abaAdmin('admins')">Admins</button>
+      <button class="at${t==="users"?" on":""}"   onclick="abaAdmin('users')">Usuários</button>
     </div>
-    ${t==="emails"?htmlAdminEmails():t==="admins"?htmlAdminAdmins():htmlAdminUsers()}`;
+    ${t==="grupos"?htmlAdminGrupos():t==="emails"?htmlAdminEmails():t==="admins"?htmlAdminAdmins():htmlAdminUsers()}`;
 }
 
 function htmlAdminEmails() {
@@ -856,7 +871,7 @@ function renderRelFiltros() {
     <div style="margin-bottom:8px">
       <label class="fl">Dimensão</label>
       <div id="pills-dim">
-        ${["cat:Categoria","user:Usuário","payer:Quem Pagou"].map(p=>{const[v,l]=p.split(":");return`<span class="pill${G.rDim===v?" on":""}" onclick="G.rDim='${v}';renderRelChart()">${l}</span>`;}).join("")}
+      ${["cat:Categoria","grupo:Grupo","user:Usuário","payer:Quem Pagou"].map(p=>{const[v,l]=p.split(":");return`<span class="pill${G.rDim===v?" on":""}" onclick="G.rDim='${v}';renderRelChart()">${l}</span>`;}).join("")}
       </div>
     </div>
     <div style="margin-bottom:10px">
@@ -918,7 +933,7 @@ function renderRelChart() {
     if (isPie) {
       const agg = {};
       series.forEach(s => {
-        const src = G.rDim==="cat" ? s.byCat : G.rDim==="user" ? s.byUser : s.byPayer;
+        const src = G.rDim==="cat" ? s.byCat : G.rDim==="grupo" ? s.byGrupo : G.rDim==="user" ? s.byUser : s.byPayer;
         Object.entries(src||{}).forEach(([k,v]) => {
           if (!agg[k]) agg[k] = 0;
           agg[k] += (typeof v==="object" ? (v[G.rMetric]||v.total||0) : v) || 0;
@@ -927,10 +942,11 @@ function renderRelChart() {
       const labels=[],data=[],colors=[];
       const pal=["#534AB7","#1D9E75","#BA7517","#378ADD","#993C1D","#888780"];
       Object.entries(agg).forEach(([k,v],i) => {
-        const c = G.rDim==="cat" ? catById(k) : null;
-        labels.push(c ? c.label : k.split("@")[0]);
+        const c   = G.rDim==="cat" ? catById(k) : null;
+        const grp = G.rDim==="grupo" ? G.grupos.find(g=>g.id===k) : null;
+        labels.push(grp ? grp.icone+" "+grp.nome : c ? c.label : k.split("@")[0]);
         data.push(parseFloat(Number(v).toFixed(2)));
-        colors.push(c ? c.bar : pal[i%pal.length]);
+        colors.push(grp ? grp.cor : c ? c.bar : pal[i%pal.length]);
       });
       G.rChart = new Chart(canvas, {
         type: G.rType,
@@ -953,6 +969,20 @@ function renderRelChart() {
           label: c.label,
           data: series.map(s => { const d=s.byCat&&s.byCat[cid]; return d?(d[G.rMetric]||0):0; }),
           backgroundColor: c.bar+"88", borderColor: c.bar, borderWidth:2, fill:false, tension:.3
+        };
+      });
+    } else if (G.rDim === "grupo") {
+      const allGrupos = new Set();
+      series.forEach(s => Object.keys(s.byGrupo||{}).forEach(k => allGrupos.add(k)));
+      const pal = ["#534AB7","#1D9E75","#BA7517","#378ADD","#993C1D","#888780"];
+      datasets = Array.from(allGrupos).map((gid, i) => {
+        const grp = G.grupos.find(g => g.id === gid);
+        const cor = grp ? grp.cor : pal[i%pal.length];
+        const lbl = grp ? grp.icone + " " + grp.nome : gid;
+        return {
+          label: lbl,
+          data: series.map(s => { const d=s.byGrupo&&s.byGrupo[gid]; return d?(d[G.rMetric]||0):0; }),
+          backgroundColor: cor+"88", borderColor: cor, borderWidth:2, fill:false, tension:.3
         };
       });
     } else {
@@ -1000,13 +1030,35 @@ function htmlRelTabela() {
 function htmlRelResumo() {
   const sm = G.rData.summary;
   if (!sm) return '<div class="empty">Sem dados.</div>';
+
+  const blocoGrupos = Object.keys(sm.byGrupo||{}).length
+    ? `<p class="sec" style="margin-top:10px">Por grupo</p>
+      ${Object.entries(sm.byGrupo||{}).sort((a,b)=>b[1].total-a[1].total).map(([gid,d])=>{
+        const grp = G.grupos.find(g=>g.id===gid);
+        const cor = grp ? grp.cor : "#888780";
+        const lbl = grp ? grp.icone+" "+grp.nome : gid;
+        const pct = sm.total>0?Math.round(d.total/sm.total*100):0;
+        return `<div class="card" style="margin-bottom:7px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:6px">
+            <div style="width:34px;height:34px;border-radius:var(--rads);background:${cor}22;border:2px solid ${cor};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${grp?grp.icone:"📁"}</div>
+            <div style="flex:1"><div style="font-size:14px;font-weight:700">${esc(lbl.replace(/^.+? /,""))}</div>
+              <div style="font-size:12px;color:var(--t2)">${d.count} despesa${d.count!==1?"s":""}</div></div>
+            <div style="text-align:right"><div style="font-size:14px;font-weight:700">${fmt(d.total)}</div>
+              <div style="font-size:11px;color:#0F6E56">${fmt(d.settled)} quitado</div></div>
+          </div>
+          <div class="bbar" style="height:5px"><div class="bfill" style="width:${pct}%;background:${cor}"></div></div>
+        </div>`;
+      }).join("")}`
+    : "";
+
   return `<div class="grid2" style="margin-bottom:10px">
     <div class="card"><div class="ml">Total</div><div class="mv">${fmt(sm.total||0)}</div></div>
     <div class="card"><div class="ml">Quitado</div><div class="mv pos">${fmt(sm.settled||0)}</div></div>
     <div class="card"><div class="ml">Pendente</div><div class="mv neg">${fmt(sm.pending||0)}</div></div>
     <div class="card"><div class="ml">Despesas</div><div class="mv">${sm.count||0}</div></div>
   </div>
-  <p class="sec">Por categoria</p>
+  ${blocoGrupos}
+  <p class="sec" style="margin-top:4px">Por categoria</p>
   ${Object.entries(sm.byCat||{}).sort((a,b)=>b[1].total-a[1].total).map(([cid,d])=>{
     const c=catById(cid);const pct=sm.total>0?Math.round(d.total/sm.total*100):0;
     return`<div class="card" style="margin-bottom:7px">
@@ -1035,18 +1087,28 @@ function editarExp(ev, id) {
   const e = G.expenses.find(x => x.id === id);
   if (!e) return;
   G.editId = id;
-  G.form = { desc:e.desc, val:String(e.val), cat:e.cat, payer:e.payer, pct:e.pctMe };
+  G.form = { desc:e.desc, val:String(e.val), cat:e.cat, grupo:e.grupo||"", payer:e.payer, pct:e.pctMe };
   abrirModal();
 }
 
 function abrirModal() {
   const f = G.form;
   const isEdit = G.editId !== null;
+
+  // Monta seletor de grupos
+  const grupoSelect = G.grupos.length
+    ? `<select class="fi" id="f-grupo" style="padding:10px 12px" onchange="G.form.grupo=this.value">
+        <option value="">— Sem grupo —</option>
+        ${G.grupos.map(g => `<option value="${esc(g.id)}"${f.grupo===g.id?" selected":""}>${esc(g.icone)} ${esc(g.nome)}</option>`).join("")}
+      </select>`
+    : `<div style="font-size:13px;color:var(--t2);padding:8px 0">Nenhum grupo cadastrado. <button onclick="fecharModal();irTab('admin')" style="background:none;border:none;color:var(--p);font-weight:700;cursor:pointer;font-size:13px">Criar grupos →</button></div>`;
+
   document.getElementById("mod-inner").innerHTML = `
     <div class="mh"></div>
     <p class="mt">${isEdit?"Editar despesa":"Nova despesa"}</p>
     <div class="fg"><label class="fl">Descrição</label><input class="fi" id="f-desc" value="${esc(f.desc)}" placeholder="Ex: Supermercado"/></div>
     <div class="fg"><label class="fl">Valor (R$)</label><input class="fi" id="f-val" type="number" value="${f.val}" placeholder="0,00" inputmode="decimal"/></div>
+    <div class="fg"><label class="fl">Grupo</label>${grupoSelect}</div>
     <div class="fg"><label class="fl">Categoria</label>
       <div class="cgrid" id="f-cats">${CATS.map(c=>`<button class="cb${c.id===f.cat?" on":""}" onclick="pickCat('${c.id}')"><span class="ce">${c.emoji}</span>${c.label}</button>`).join("")}</div>
     </div>
@@ -1091,11 +1153,12 @@ function fecharModal() { document.getElementById("mbg").style.display = "none"; 
 function fecharSeExt(e) { if (e.target === document.getElementById("mbg")) fecharModal(); }
 
 async function salvarExp() {
-  const desc = document.getElementById("f-desc").value.trim();
-  const val  = parseFloat(document.getElementById("f-val").value);
+  const desc  = document.getElementById("f-desc").value.trim();
+  const val   = parseFloat(document.getElementById("f-val").value);
+  const grupo = document.getElementById("f-grupo") ? document.getElementById("f-grupo").value : G.form.grupo;
   if (!desc || isNaN(val) || val <= 0) { toast("Preencha descrição e valor"); return; }
 
-  const payload = { desc, val, cat:G.form.cat, payer:G.form.payer, pctMe:G.form.pct, date:hoje() };
+  const payload = { desc, val, cat:G.form.cat, grupo, payer:G.form.payer, pctMe:G.form.pct, date:hoje() };
   load(G.editId ? "Atualizando..." : "Salvando...");
   try {
     if (G.editId) {
@@ -1448,6 +1511,141 @@ async function remAdm(email) {
   } catch(e) { toast("Erro"); }
   finally { hideLoad(); }
 }
+// Paleta de cores pré-definidas para grupos
+const CORES_GRUPO = [
+  "#534AB7","#1D9E75","#BA7517","#378ADD","#993C1D",
+  "#D4537E","#5F5E5A","#639922","#D85A30","#185FA5"
+];
+// Ícones sugeridos
+const ICONES_GRUPO = ["🏠","🚗","🍽️","💊","📚","🏋️","✈️","🐾","🎮","💼","🛒","💡","🎉","👶","🌿"];
+
+function htmlAdminGrupos() {
+  const lista = G.grupos.length
+    ? G.grupos.map(g => `
+      <div class="acard" id="gc-${esc(g.id)}">
+        <div style="width:40px;height:40px;border-radius:var(--rads);background:${esc(g.cor)}22;border:2px solid ${esc(g.cor)};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${esc(g.icone)}</div>
+        <div class="acard-info"><h3>${esc(g.nome)}</h3><p style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:${esc(g.cor)};display:inline-block"></span>${esc(g.cor)}</p></div>
+        <button class="ebtn" style="flex:0;padding:6px 10px;font-size:12px" onclick="abrirEditGrupo('${esc(g.id)}','${esc(g.nome)}','${esc(g.cor)}','${esc(g.icone)}')">Editar</button>
+        <button class="adel" onclick="remGrupo('${esc(g.id)}','${esc(g.nome)}')">Excluir</button>
+      </div>`).join("")
+    : '<div class="empty">Nenhum grupo cadastrado ainda.</div>';
+
+  return `
+    <div class="card" style="margin-bottom:12px">
+      <p class="sec" style="margin-bottom:10px">Novo grupo</p>
+      <div class="fg"><label class="fl">Nome do grupo</label>
+        <input class="fi" id="ng-nome" placeholder="Ex: Casa, Carro, Viagem..."/>
+      </div>
+      <div class="fg"><label class="fl">Ícone</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px" id="ng-icones">
+          ${ICONES_GRUPO.map(ic=>`<button onclick="pickIconeGrupo('${ic}')" style="width:38px;height:38px;font-size:20px;border:.5px solid var(--bord);border-radius:var(--rads);background:var(--surf);cursor:pointer" id="ig-${ic}">${ic}</button>`).join("")}
+        </div>
+        <input class="fi" id="ng-icone" placeholder="Ou cole qualquer emoji" style="margin-top:6px" value="📁"/>
+      </div>
+      <div class="fg"><label class="fl">Cor</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+          ${CORES_GRUPO.map(c=>`<button onclick="pickCorGrupo('${c}')" style="width:32px;height:32px;border-radius:50%;background:${c};border:2px solid transparent;cursor:pointer" id="cg-${c.replace('#','')}"></button>`).join("")}
+        </div>
+        <input class="fi" id="ng-cor" value="#534AB7" placeholder="#000000" oninput="document.getElementById('ng-cor-prev').style.background=this.value" style="font-family:monospace"/>
+        <div id="ng-cor-prev" style="margin-top:6px;height:8px;border-radius:4px;background:#534AB7"></div>
+      </div>
+      <button class="bs" style="width:100%;padding:11px" onclick="addGrupo()">+ Criar grupo</button>
+    </div>
+    <p class="sec">Grupos cadastrados (${G.grupos.length})</p>
+    ${lista}`;
+}
+
+function pickIconeGrupo(ic) {
+  document.getElementById("ng-icone").value = ic;
+  document.querySelectorAll("#ng-icones button").forEach(b => b.style.borderColor = "var(--bord)");
+  const btn = document.getElementById("ig-" + ic);
+  if (btn) btn.style.borderColor = "var(--p)";
+}
+
+function pickCorGrupo(cor) {
+  document.getElementById("ng-cor").value = cor;
+  document.getElementById("ng-cor-prev").style.background = cor;
+  document.querySelectorAll("[id^='cg-']").forEach(b => b.style.border = "2px solid transparent");
+  const btn = document.getElementById("cg-" + cor.replace("#",""));
+  if (btn) btn.style.border = "3px solid var(--t)";
+}
+
+async function addGrupo() {
+  const nome  = (document.getElementById("ng-nome").value || "").trim();
+  const icone = (document.getElementById("ng-icone").value || "📁").trim();
+  const cor   = (document.getElementById("ng-cor").value   || "#534AB7").trim();
+  if (!nome) { toast("Digite o nome do grupo"); return; }
+  load("Criando grupo...");
+  try {
+    const r = await api({ action:"addGrupo", token:G.token, nome, icone, cor });
+    if (!r.ok) { toast(r.error || "Erro"); return; }
+    G.grupos.push({ id:r.id, nome, icone, cor, ativo:true });
+    document.getElementById("ng-nome").value  = "";
+    document.getElementById("ng-icone").value = "📁";
+    toast("Grupo criado ✓");
+    document.getElementById("tab-cont").innerHTML = htmlAdmin();
+  } catch(e) { toast("Erro de conexão"); }
+  finally { hideLoad(); }
+}
+
+function abrirEditGrupo(id, nome, cor, icone) {
+  document.getElementById("mod-inner").innerHTML = `
+    <div class="mh"></div>
+    <p class="mt">Editar grupo</p>
+    <div class="fg"><label class="fl">Nome</label>
+      <input class="fi" id="eg-nome" value="${esc(nome)}"/>
+    </div>
+    <div class="fg"><label class="fl">Ícone</label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+        ${ICONES_GRUPO.map(ic=>`<button onclick="document.getElementById('eg-icone').value='${ic}'" style="width:36px;height:36px;font-size:18px;border:.5px solid var(--bord);border-radius:var(--rads);background:var(--surf);cursor:pointer">${ic}</button>`).join("")}
+      </div>
+      <input class="fi" id="eg-icone" value="${esc(icone)}" placeholder="Emoji"/>
+    </div>
+    <div class="fg"><label class="fl">Cor</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+        ${CORES_GRUPO.map(c=>`<button onclick="document.getElementById('eg-cor').value='${c}';document.getElementById('eg-cor-prev').style.background='${c}'" style="width:30px;height:30px;border-radius:50%;background:${c};border:none;cursor:pointer"></button>`).join("")}
+      </div>
+      <input class="fi" id="eg-cor" value="${esc(cor)}" oninput="document.getElementById('eg-cor-prev').style.background=this.value" style="font-family:monospace"/>
+      <div id="eg-cor-prev" style="margin-top:6px;height:8px;border-radius:4px;background:${esc(cor)}"></div>
+    </div>
+    <div class="macts">
+      <button class="bc" onclick="fecharModal()">Cancelar</button>
+      <button class="bs" onclick="salvarEditGrupo('${esc(id)}')">Salvar</button>
+    </div>`;
+  document.getElementById("mbg").style.display = "flex";
+}
+
+async function salvarEditGrupo(id) {
+  const nome  = (document.getElementById("eg-nome").value  || "").trim();
+  const icone = (document.getElementById("eg-icone").value || "📁").trim();
+  const cor   = (document.getElementById("eg-cor").value   || "#534AB7").trim();
+  if (!nome) { toast("Nome obrigatório"); return; }
+  fecharModal();
+  load("Salvando...");
+  try {
+    const r = await api({ action:"editGrupo", token:G.token, id, nome, icone, cor });
+    if (!r.ok) { toast(r.error || "Erro"); return; }
+    const g = G.grupos.find(x => x.id === id);
+    if (g) { g.nome = nome; g.icone = icone; g.cor = cor; }
+    toast("Grupo atualizado ✓");
+    document.getElementById("tab-cont").innerHTML = htmlAdmin();
+  } catch(e) { toast("Erro de conexão"); }
+  finally { hideLoad(); }
+}
+
+async function remGrupo(id, nome) {
+  if (!confirm(`Excluir o grupo "${nome}"?\nAs despesas vinculadas ficarão sem grupo.`)) return;
+  load("Excluindo...");
+  try {
+    const r = await api({ action:"deleteGrupo", token:G.token, id });
+    if (!r.ok) { toast(r.error || "Erro"); return; }
+    G.grupos = G.grupos.filter(g => g.id !== id);
+    toast("Grupo excluído");
+    document.getElementById("tab-cont").innerHTML = htmlAdmin();
+  } catch(e) { toast("Erro de conexão"); }
+  finally { hideLoad(); }
+}
+
 function abaAdmin(tab) { G.adminTab = tab; document.getElementById("tab-cont").innerHTML = htmlAdmin(); }
 
 // ================================================================
